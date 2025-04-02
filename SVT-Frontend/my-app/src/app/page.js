@@ -52,10 +52,10 @@ export default function HomePage() {
           className="space-y-6"
         >
           <motion.h1 variants={itemVariants} className="text-4xl font-bold text-white mb-2">
-            Bienvenido
+            Bienvenido a SVT
           </motion.h1>
           <motion.p variants={itemVariants} className="text-gray-400 mb-8">
-            Únete a nuestra plataforma y comienza tu experiencia hoy mismo.
+            Únete a nuestra plataforma y comienza a mejorar tu sistema de inventarios.
           </motion.p>
           <div className="flex flex-col space-y-4">
             <motion.button 
