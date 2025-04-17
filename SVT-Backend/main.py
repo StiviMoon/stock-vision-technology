@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, users
+from routers import auth, users, productos, proveedores
 from database import engine
 import models
 
@@ -9,9 +9,13 @@ import models
 models.Base.metadata.create_all(bind=engine)
 
 # Inicializar la aplicación FastAPI
-app = FastAPI()
+app = FastAPI(
+    title="Sistema de Gestión de Inventarios SVT",
+    description="API para el sistema de inventario SVT",
+    version="1.0.0",
+)
 
-# Configuración de CORS - AÑADIR ESTO
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # Tu frontend Next.js
@@ -20,9 +24,12 @@ app.add_middleware(
     allow_headers=["*"],  # Permite todos los headers
 )
 
-# Incluir los routers correctamente (una sola vez cada uno)
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])  
+# Incluir los routers
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(productos.router, prefix="/productos", tags=["Productos"])
+app.include_router(proveedores.router, prefix="/proveedores", tags=["Proveedores"])
+
 
 # Ruta de prueba
 @app.get("/")
