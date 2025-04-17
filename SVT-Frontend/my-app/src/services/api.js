@@ -104,7 +104,7 @@ export const userService = {
   // Actualizar rol de usuario (solo para administradores)
   updateUserRole: async (userId, newRole) => {
     try {
-      const response = await api.put(`/users/${userId}/change-role`, { new_role: newRole });
+      const response = await api.put(`/users/${userId}/role`, { new_role: newRole });
       return response.data;
     } catch (error) {
       throw error;
@@ -120,6 +120,95 @@ export const userService = {
       throw error;
     }
   }
+};
+
+// Servicio de productos
+export const productoService = {
+  // Obtener todos los productos con filtros opcionales
+  getProductos: async (filtros = {}) => {
+    try {
+      const response = await api.get('/productos', { params: filtros });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener un producto por ID
+  getProducto: async (productoId) => {
+    try {
+      const response = await api.get(`/productos/${productoId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Crear un nuevo producto
+  createProducto: async (productoData) => {
+    try {
+      const response = await api.post('/productos', productoData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Actualizar un producto existente
+  updateProducto: async (productoId, productoData) => {
+    try {
+      const response = await api.put(`/productos/${productoId}`, productoData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Eliminar un producto
+  deleteProducto: async (productoId) => {
+    try {
+      const response = await api.delete(`/productos/${productoId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+// Servicio de proveedores
+export const proveedorService = {
+  // Obtener todos los proveedores con búsqueda opcional
+  getProveedores: async (params = {}) => {
+    try {
+      const response = await api.get('/proveedores', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener un proveedor por ID
+  getProveedor: async (proveedorId) => {
+    try {
+      const response = await api.get(`/proveedores/${proveedorId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Crear un nuevo proveedor
+  createProveedor: async (proveedorData) => {
+    try {
+      const response = await api.post('/proveedores', proveedorData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+  
+  // Puedes agregar aquí métodos para actualizar y eliminar proveedores
+  // si tu backend los soporta
 };
 
 export default api;
