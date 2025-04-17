@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 import models, schemas, database
 from services import proveedor_service
 from utils.security import get_current_user
-from routers.productos import verify_jefe_bodega
+from utils.role_verification import verify_jefe_bodega_or_admin
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ router = APIRouter()
 def crear_proveedor(
     proveedor: schemas.ProveedorCreate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
 ):
     """Permite al Jefe de Bodega registrar un nuevo proveedor"""
     # Verificar si ya existe un proveedor con el mismo código
@@ -34,7 +34,7 @@ def crear_proveedor(
 @router.get("/", response_model=List[schemas.ProveedorResponse])
 def listar_proveedores(
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
     skip: int = 0,
     limit: int = 100,
     search: Optional[str] = None,
@@ -50,7 +50,7 @@ def listar_proveedores(
 def obtener_proveedor(
     proveedor_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
 ):
     """Permite al Jefe de Bodega consultar la información de un proveedor específico"""
     db_proveedor = proveedor_service.get_proveedor(db, proveedor_id=proveedor_id)
@@ -60,3 +60,41 @@ def obtener_proveedor(
             detail=f"Proveedor con ID {proveedor_id} no encontrado",
         )
     return db_proveedor
+
+
+@router.put(
+    "/{proveedor_id}",
+    response_model=schemas.ProveedorResponse,
+    status_code=status.HTTP_200_OK,
+)
+def editar_proveedor(
+    proveedor_id: int,
+    proveedor: schemas.ProveedorCreate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+):
+    """Permite al Jefe de Bodega editar la información de un proveedor"""
+    db_proveedor = proveedor_service.update_proveedor(
+        db, proveedor_id=proveedor_id, proveedor=proveedor
+    )
+    if db_proveedor is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Proveedor con ID {proveedor_id} no encontrado",
+        )
+    return db_proveedor
+
+
+@router.delete("/{proveedor_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_provedor(
+    proveedor_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+):
+    """Permite al Jefe de Bodega eliminar un proveedor"""
+    db_proveedor = proveedor_service.delete_proveedor(db, proveedor_id=proveedor_id)
+    if db_proveedor is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Proveedor con ID {proveedor_id} no encontrado",
+        )

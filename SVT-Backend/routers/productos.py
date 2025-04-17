@@ -5,18 +5,9 @@ from sqlalchemy.orm import Session
 import models, schemas, database
 from services import producto_service
 from utils.security import get_current_user
+from utils.role_verification import verify_jefe_bodega_or_admin
 
 router = APIRouter()
-
-
-# Middleware para verificar rol de Jefe de Bodega
-def verify_jefe_bodega(current_user: models.User = Depends(get_current_user)):
-    if current_user.rol != "ADMIN":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de Jefe de Bodega para esta operación",
-        )
-    return current_user
 
 
 @router.post(
@@ -27,7 +18,7 @@ def verify_jefe_bodega(current_user: models.User = Depends(get_current_user)):
 def crear_producto(
     producto: schemas.ProductoCreate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
 ):
     """
     RF1.1: Permite al Jefe de Bodega registrar un nuevo producto con todos sus detalles.
@@ -45,7 +36,7 @@ def crear_producto(
 @router.get("/", response_model=List[schemas.ProductoResponse])
 def listar_productos(
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
     skip: int = 0,
     limit: int = 100,
     sku: Optional[str] = None,
@@ -72,7 +63,7 @@ def listar_productos(
 def obtener_producto(
     producto_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
 ):
     """
     RF1.2: Permite al Jefe de Bodega consultar la información detallada de un producto específico.
@@ -91,7 +82,7 @@ def actualizar_producto(
     producto_id: int,
     producto: schemas.ProductoUpdate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
 ):
     """
     RF1.3: Permite al Jefe de Bodega actualizar la información de un producto.
@@ -111,7 +102,7 @@ def actualizar_producto(
 def eliminar_producto(
     producto_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega),
+    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
 ):
     """
     RF1.4: Permite al Jefe de Bodega eliminar un producto.

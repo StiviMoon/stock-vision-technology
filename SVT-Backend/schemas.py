@@ -18,6 +18,10 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class RoleUpdateRequest(BaseModel):
+    new_role: str
+
+
 # Esquemas de Proveedor
 class ProveedorBase(BaseModel):
     nombre: str

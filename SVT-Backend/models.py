@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Tex
 from sqlalchemy.orm import relationship
 from database import Base
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class User(Base):
@@ -48,9 +48,11 @@ class Producto(Base):
     proveedor_id = Column(Integer, ForeignKey("proveedores.id"))
     stock_actual = Column(Integer, default=0)
     stock_minimo = Column(Integer, default=0)
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_creacion = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     fecha_actualizacion = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     # Relación con proveedor
