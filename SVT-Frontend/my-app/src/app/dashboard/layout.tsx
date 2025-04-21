@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, ReactNode } from 'react';
-import Nav from '../../components/nav/NavBard';
+import Nav from '../../components/nav/NavBar';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -144,7 +144,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <ThemeProvider>
-      <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300">
+      <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300 pt-14 xl:p-0">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div 

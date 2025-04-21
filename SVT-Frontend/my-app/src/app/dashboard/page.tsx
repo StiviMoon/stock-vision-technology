@@ -61,7 +61,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-8  md:p-8">
       <motion.div
         variants={containerVariants}
         initial="hidden"

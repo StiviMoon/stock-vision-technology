@@ -70,7 +70,7 @@ const Nav = ({ user }) => {
     { 
       id: 'bodega', 
       name: 'Bodega', 
-      icon: <Store  size={20} />, 
+      icon: <Store size={20} />, 
       path: '/dashboard/bodega',
       isActive: activePath.includes('/bodega')
     },
@@ -113,16 +113,16 @@ const Nav = ({ user }) => {
     return (
       <>
         {/* Barra superior móvil */}
-        <div className="fixed top-0 left-0 right-0 h-16 bg-gray-900 z-40 px-4 flex items-center justify-between border-b border-gray-800">
+        <div className="fixed top-0 left-0 right-0 h-16 bg-sidebar z-40 px-4 flex items-center justify-between border-b border-sidebar-border">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold">
               SVT
             </div>
-            <span className="text-white text-lg font-semibold ml-3">Dashboard</span>
+            <span className="text-sidebar-foreground text-lg font-semibold ml-3">Dashboard</span>
           </div>
           <button 
             onClick={() => setMobileMenuOpen(true)}
-            className="w-10 h-10 rounded-lg bg-gray-800 text-gray-200 flex items-center justify-center"
+            className="w-10 h-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center"
           >
             <Menu size={20} />
           </button>
@@ -136,11 +136,11 @@ const Nav = ({ user }) => {
 
         {/* Menú móvil con animación de slide */}
         <div 
-          className={`fixed top-0 left-0 z-50 h-screen w-72 bg-gray-900 text-white border-r border-gray-800 shadow-xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`fixed top-0 left-0 z-50 h-screen w-72 bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-xl transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
-          <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+          <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold">
                 SVT
               </div>
               <span className="text-lg font-semibold ml-3">Dashboard</span>
@@ -148,7 +148,7 @@ const Nav = ({ user }) => {
             
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="w-8 h-8 rounded-md hover:bg-gray-800 flex items-center justify-center"
+              className="w-8 h-8 rounded-md hover:bg-muted flex items-center justify-center"
             >
               <X size={20} />
             </button>
@@ -162,8 +162,8 @@ const Nav = ({ user }) => {
                     onClick={() => navigateTo(item.path)}
                     className={`w-full flex items-center px-4 py-3 rounded-xl cursor-pointer ${
                       item.isActive
-                        ? 'bg-teal-800 text-white' 
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                     }`}
                   >
                     <div className="flex items-center justify-center">
@@ -176,10 +176,10 @@ const Nav = ({ user }) => {
             </ul>
           </div>
 
-          <div className="mt-auto border-t border-gray-800 p-4">
+          <div className="mt-auto border-t border-sidebar-border p-4">
             <div className="flex items-center space-x-4 mb-5">
               <div className="relative">
-                <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center overflow-hidden">
                   <img 
                     src="/img/usuario.png"
                     alt="Avatar"
@@ -190,19 +190,19 @@ const Nav = ({ user }) => {
                     }}
                   />
                 </div>
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-sidebar"></div>
               </div>
               
               <div className="flex flex-col justify-center">
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium text-sidebar-foreground">
                   {user?.rol === 'ADMIN' ? 'Administrador' : 'Usuario'}
                 </span>
-                <span className="text-xs text-gray-400">{user?.email || 'usuario@svt.com'}</span>
+                <span className="text-xs text-muted-foreground">{user?.email || 'usuario@svt.com'}</span>
               </div>
             </div>
             
             <button 
-              className="w-full flex items-center justify-center px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm"
+              className="w-full flex items-center justify-center px-4 py-3 bg-sidebar-accent hover:bg-muted rounded-xl text-sm"
               onClick={handleLogout}
             >
               <LogOut size={18} />
@@ -219,10 +219,10 @@ const Nav = ({ user }) => {
 
   // Versión escritorio
   return (
-    <div className="h-screen bg-gray-900 text-white border-r border-gray-800 overflow-hidden flex flex-col w-64">
-      <div className="p-5 border-b border-gray-800">
+    <div className="h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border overflow-hidden flex flex-col w-64">
+      <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold">
             SVT
           </div>
           <span className="ml-3 text-lg font-semibold">Dashboard</span>
@@ -237,8 +237,8 @@ const Nav = ({ user }) => {
                 onClick={() => navigateTo(item.path)}
                 className={`w-full flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all ${
                   item.isActive
-                    ? 'bg-teal-800 text-white' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 }`}
               >
                 <div className="flex items-center justify-center">
@@ -251,10 +251,10 @@ const Nav = ({ user }) => {
         </ul>
       </div>
       
-      <div className="mt-auto border-t border-gray-800 p-5">
+      <div className="mt-auto border-t border-sidebar-border p-5">
         <div className="flex items-center space-x-4 mb-5">
           <div className="relative">
-            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center overflow-hidden">
               <img 
                 src="/img/usuario.png"
                 alt="Avatar"
@@ -265,19 +265,19 @@ const Nav = ({ user }) => {
                 }}
               />
             </div>
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900"></div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-sidebar"></div>
           </div>
           
           <div className="flex flex-col justify-center">
-            <span className="text-sm font-medium">
+            <span className="text-sm font-medium text-sidebar-foreground">
               {user?.rol === 'ADMIN' ? 'Administrador' : 'Usuario'}
             </span>
-            <span className="text-xs text-gray-400">{user?.email || 'usuario@svt.com'}</span>
+            <span className="text-xs text-muted-foreground">{user?.email || 'usuario@svt.com'}</span>
           </div>
         </div>
         
         <button 
-          className="w-full flex items-center justify-center px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm"
+          className="w-full flex items-center justify-center px-4 py-3 bg-sidebar-accent hover:bg-destructive/30 cursor-pointer rounded-xl text-sm"
           onClick={handleLogout}
         >
           <LogOut size={18} />

@@ -32,7 +32,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/app/dashboard/admin/usuarios/page.tsx", "src/components/producto/SKUGenerator.js"  ],
   "exclude": [
     "node_modules"
   ]
