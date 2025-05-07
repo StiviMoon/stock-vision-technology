@@ -162,3 +162,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Escalas personalizadas para botones */
+  .scale-103 {
+    transform: scale(1.03);
+  }
+  .scale-97 {
+    transform: scale(0.97);
+  }
+  
+  /* Duración personalizada */
+  .duration-600 {
+    transition-duration: 600ms;
+  }
+}

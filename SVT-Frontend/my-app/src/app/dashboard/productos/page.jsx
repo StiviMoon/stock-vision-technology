@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { productoService } from '../../../services/api';
-import { motion } from 'framer-motion';
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -12,31 +11,6 @@ import ProductoForm from '../../../components/producto/ProductoForm';
 import DeleteDialog from '../../../components/producto/DeleteDialog';
 import ErrorAlert from '../../../components/producto/ErrorAlert';
 
-// Animaciones
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { 
-    y: 0, 
-    opacity: 1, 
-    transition: { 
-      type: 'spring', 
-      stiffness: 260, 
-      damping: 20 
-    } 
-  }
-};
-
 export default function ProductosPage() {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +18,7 @@ export default function ProductosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProducto, setCurrentProducto] = useState(null);
   const [formMode, setFormMode] = useState('create'); // 'create' o 'edit'
+  const [isVisible, setIsVisible] = useState(false);
   
   // Estado para el diálogo de confirmación de eliminación
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -52,6 +27,9 @@ export default function ProductosPage() {
 
   useEffect(() => {
     fetchProductos();
+    // Activar las animaciones después de cargar los datos
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const fetchProductos = async () => {
@@ -141,7 +119,7 @@ export default function ProductosPage() {
 
   if (loading) return (
     <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
     </div>
   );
   
@@ -150,40 +128,44 @@ export default function ProductosPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 ">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-6"
-      >
+    <div className="p-6 md:p-8">
+      <div className="space-y-6">
         {/* Encabezado y botón de crear */}
         <div className="flex justify-between items-center">
-          <motion.div variants={itemVariants}>
-            <h1 className="text-3xl font-bold  text-black dark:text-white mb-2">Productos</h1>
-            <p className="text-gray-400">Bienvenido al sistema de inventario SVT</p>
-          </motion.div>
-          <motion.div variants={itemVariants}>
+          <div 
+            className={`transform transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ transitionDelay: '100ms' }}
+          >
+            <h1 className="text-3xl font-bold text-foreground mb-2">Productos</h1>
+            <p className="text-muted-foreground">Bienvenido al sistema de inventario SVT</p>
+          </div>
+          <div 
+            className={`transform transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ transitionDelay: '200ms' }}
+          >
             <Button 
               onClick={openCreateModal} 
               variant="default"
-              className="flex items-center"
+              className="flex items-center transition-all duration-150 hover:shadow-md active:translate-y-0.5"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Nuevo Producto
             </Button>
-          </motion.div>
+          </div>
         </div>
 
         {/* Tabla de productos */}
-        <motion.div variants={itemVariants}>
+        <div 
+          className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          style={{ transitionDelay: '300ms' }}
+        >
           <ProductoTable 
             productos={productos} 
             onEdit={openEditModal} 
             onDelete={openDeleteDialog} 
           />
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Modal para crear/editar producto */}
       <ProductoForm 

@@ -4,7 +4,6 @@ import { useState, useEffect, ReactNode } from 'react';
 import Nav from '../../components/nav/NavBar';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeProvider } from './Theme/ThemeContext';
 import ThemeToggle from './Theme/ThemeToggle';
 import { Loader2 } from 'lucide-react';
@@ -22,6 +21,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
+  const [showContent, setShowContent] = useState<boolean>(false);
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -96,105 +96,57 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       } finally {
         // Pequeño retraso para asegurar una transición suave
-        setTimeout(() => setLoading(false), 500);
+        setTimeout(() => {
+          setLoading(false);
+          // Pequeño retraso adicional para la segunda animación
+          setTimeout(() => setShowContent(true), 50);
+        }, 500);
       }
     };
     
     fetchUserData();
   }, [router, API_URL]);
 
-  // Animación para el contenido
-  const contentVariants = {
-    hidden: { opacity: 0, x: 10 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { 
-        type: 'spring', 
-        stiffness: 250, 
-        damping: 25,
-        delay: 0.1
-      } 
-    },
-    exit: {
-      opacity: 0,
-      x: -10,
-      transition: {
-        duration: 0.2
-      }
-    }
-  };
-
-  // Animación para el loading
-  const loadingVariants = {
-    initial: { opacity: 0 },
-    animate: { 
-      opacity: 1,
-      transition: {
-        duration: 0.3
-      }
-    },
-    exit: { 
-      opacity: 0,
-      transition: {
-        duration: 0.3
-      }
-    }
-  };
-
   return (
     <ThemeProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300 pt-14 xl:p-0">
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div 
-              key="loading"
-              className="min-h-screen w-full flex flex-col items-center justify-center bg-background"
-              variants={loadingVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold text-2xl">
-                  SVT
-                </div>
-                <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                <div className="text-muted-foreground mt-2">Cargando sistema...</div>
+        {loading ? (
+          <div 
+            className="min-h-screen w-full flex flex-col items-center justify-center bg-background transition-opacity duration-300 ease-in-out opacity-100"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold text-2xl">
+                SVT
               </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="dashboard"
-              className="flex w-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <div className="text-muted-foreground mt-2">Cargando sistema...</div>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className={`flex w-full transition-opacity duration-300 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}
+          >
+            {/* Navegación lateral */}
+            <Nav user={user} />
+            
+            {/* Contenido principal */}
+            <div 
+              className={`flex-1 overflow-y-auto relative transition-all duration-500 ease-out transform ${showContent ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-3'}`}
             >
-              {/* Navegación lateral */}
-              <Nav user={user} />
-              
-              {/* Contenido principal */}
-              <motion.div 
-                className="flex-1 overflow-y-auto relative"
-                variants={contentVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {/* Botón de cambio de tema con posición mejorada y estilo */}
-                <div className="fixed bottom-6 right-6 z-10">
-                  <ThemeToggle />
-                </div>
-                
-                {/* Contenedor para el contenido de las páginas */}
-                <div className="min-h-screen pb-16">
-                  {children}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {/* Contenedor para el contenido de las páginas */}
+              <div className="min-h-screen pb-16">
+                {children}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Botón de tema con posicionamiento fijo a nivel de viewport */}
+        {!loading && (
+          <div className="fixed bottom-6 right-6 z-[9999]">
+            <ThemeToggle />
+          </div>
+        )}
       </div>
     </ThemeProvider>
   );

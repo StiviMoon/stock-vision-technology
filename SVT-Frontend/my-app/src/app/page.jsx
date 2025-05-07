@@ -1,86 +1,60 @@
-// HomePage.jsx
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 export default function HomePage() {
   const router = useRouter();
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 10, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1, 
-      transition: { 
-        type: 'spring', 
-        stiffness: 260, 
-        damping: 20 
-      } 
-    }
-  };
-
-  const buttonVariants = {
-    initial: { scale: 1 },
-    hover: { scale: 1.03, transition: { duration: 0.2 } },
-    tap: { scale: 0.97 }
-  };
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4" >
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-md p-8 bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700/40"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4">
+      <div 
+        className={`w-full max-w-md p-8 bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700/40 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       >
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
-          <motion.h1 variants={itemVariants} className="text-4xl font-bold text-white mb-2">
+        <div className="space-y-6">
+          <h1 
+            className={`text-4xl font-bold text-white mb-2 transform transition-all duration-500 ease-out ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+            style={{ transitionDelay: '200ms' }}
+          >
             Bienvenido a SVT
-          </motion.h1>
-          <motion.p variants={itemVariants} className="text-gray-400 mb-8">
+          </h1>
+          <p 
+            className={`text-gray-400 mb-8 transform transition-all duration-500 ease-out ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+            style={{ transitionDelay: '350ms' }}
+          >
             Únete a nuestra plataforma y comienza a mejorar tu sistema de inventarios.
-          </motion.p>
+          </p>
           <div className="flex flex-col space-y-4">
-            <motion.button 
-              variants={buttonVariants}
-              initial="initial"
-              whileHover="hover"
-              whileTap="tap"
-              className="bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-medium border border-gray-600 transition-all duration-200"
+            <button 
+              className={`cursor-pointer group relative bg-gray-700 text-white py-3 px-4 rounded-xl font-medium border border-gray-600 overflow-hidden transition-all duration-300 ease-out transform hover:shadow-lg hover:shadow-gray-500/20 hover:border-gray-500 active:translate-y-1 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
               onClick={() => router.push('/login')}
+              style={{ transitionDelay: '500ms' }}
             >
-              Iniciar Sesión
-            </motion.button>
-            <motion.button 
-              variants={buttonVariants}
-              initial="initial"
-              whileHover="hover"
-              whileTap="tap"
-              className="bg-teal-800 hover:bg-teal-700 text-white py-3 px-4 rounded-xl font-medium border border-teal-700/70 transition-all duration-200"
+              <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
+                Iniciar Sesión
+              </span>
+              <span className="absolute inset-0 bg-gray-600 transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></span>
+              <span className="absolute right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1">→</span>
+            </button>
+            <button 
+              className={`cursor-pointer group relative bg-teal-800 text-white py-3 px-4 rounded-xl font-medium border border-teal-700/70 overflow-hidden transition-all duration-300 ease-out transform hover:shadow-lg hover:shadow-teal-500/20 hover:border-teal-600 active:translate-y-1 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
               onClick={() => router.push('/register')}
+              style={{ transitionDelay: '650ms' }}
             >
-              Registrarse
-            </motion.button>
+              <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
+                Registrarse
+              </span>
+              <span className="absolute inset-0 bg-teal-700 transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></span>
+              <span className="absolute right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1">→</span>
+            </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
