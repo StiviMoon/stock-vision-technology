@@ -1,3 +1,4 @@
+
 'use client';
 
 // UsersDashboard.jsx (con corrección)
@@ -11,22 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Definimos la interfaz para un usuario
-interface Usuario {
-  id: number;
-  email: string;
-  rol: string;
-  nombre?: string;
-  lastLogin?: string;
-}
+import { Usuario, Filtros, UsersDashboardProps } from '../types';
 
-// Definimos la interfaz para los filtros
-interface Filtros {
-  rol?: string;
-  search?: string;
-}
-
-export default function UsersDashboard() {
+export default function UsersDashboard({}: UsersDashboardProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [allUsuarios, setAllUsuarios] = useState<Usuario[]>([]);

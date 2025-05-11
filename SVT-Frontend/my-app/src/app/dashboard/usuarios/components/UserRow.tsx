@@ -5,47 +5,10 @@ import { Check } from 'lucide-react';
 import { UserActions } from './UserActions';
 import { UserRoleSelector } from './UserRoleSelector';
 
-interface Usuario {
-  id: number;
-  email: string;
-  rol: string;
-  nombre?: string;
-  lastLogin?: string;
-}
-
-interface UserRowProps {
-  usuario: Usuario;
-  onRolChange: (userId: number, nuevoRol: string) => void;
-  onDeleteUser: (userId: number) => Promise<void>; // Cambiado a Promise<void>
-}
+// UserRow.jsx (con importación de tipos)
+import { UserRowProps, getRoleBadgeColor, getRoleDisplayName } from '../types';
 
 export function UserRow({ usuario, onRolChange, onDeleteUser }: UserRowProps) {
-  const getRoleBadgeColor = (rol: string) => {
-    switch (rol.toUpperCase()) {
-      case 'ADMIN':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'USER':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'GUEST':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getRoleDisplayName = (rol: string) => {
-    switch (rol.toUpperCase()) {
-      case 'ADMIN':
-        return 'Admin';
-      case 'USER':
-        return 'Usuario';
-      case 'GUEST':
-        return 'Invitado';
-      default:
-        return rol;
-    }
-  };
-
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
       <TableCell className="py-4">

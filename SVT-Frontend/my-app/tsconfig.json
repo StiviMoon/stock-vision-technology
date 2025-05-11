@@ -32,7 +32,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "src/app/dashboard/admin/usuarios/page.tsx", "src/app/dashboard/productos/producto/SKUGenerator.js", "src/app/dashboard/usuarios/components/UsersDashboard.jsx"  ],
+, "src/app/dashboard/admin/usuarios/page.tsx", "src/app/dashboard/productos/producto/SKUGenerator.js", "src/app/dashboard/usuarios/components/UsersDashboard.jsx", "src/services/authService.js"  ],
   "exclude": [
     "node_modules"
   ]

@@ -106,9 +106,14 @@ const Nav = ({ user }) => {
     },
   ].filter(item => !item.onlyAdmin || user?.rol === 'ADMIN');
 
+    // En tu función de logout:
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('token_type');
+    
+    // Eliminar la cookie estableciendo una fecha de expiración en el pasado
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    
     router.push('/login');
   };
 

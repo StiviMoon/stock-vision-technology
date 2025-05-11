@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import authService from '../../services/authService'; // Ajusta la ruta según donde guardes el archivo
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,8 +13,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
-  
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
     // Activar animaciones una vez que el componente se monte
@@ -28,38 +26,29 @@ export default function LoginPage() {
     try {
       setLoading(true);
       
-      // FastAPI usa OAuth2PasswordRequestForm que espera los datos como form-urlencoded
-      const formData = new URLSearchParams();
-      formData.append('username', email); // FastAPI espera 'username' aunque sea un email
-      formData.append('password', password);
-      
-      const response = await axios.post(`${API_URL}/auth/login`, formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-      
-      const { access_token, token_type } = response.data;
-      
-      // Guardar el token en localStorage
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('token_type', token_type);
+      // Usar el servicio de autenticación para el login
+      await authService.login(email, password);
       
       console.log('Login exitoso');
       router.push('/dashboard'); // Redirigir a la página de dashboard
     } catch (err) {
-      console.error('Error al iniciar sesión:', err);
-      if (err.response && err.response.data) {
-        if (err.response.data.detail) {
-          setError(Array.isArray(err.response.data.detail) 
-            ? err.response.data.detail[0].msg 
-            : err.response.data.detail);
-        } else {
-          setError('Credenciales incorrectas');
+      console.error('Error durante el login:', err);
+      
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (err.response) {
+        // El servidor respondió con un código de estado fuera del rango 2xx
+        if (err.response.status === 401) {
+          errorMessage = 'Credenciales incorrectas';
+        } else if (err.response.data && err.response.data.detail) {
+          errorMessage = err.response.data.detail;
         }
-      } else {
-        setError('Error de conexión al servidor');
+      } else if (err.request) {
+        // La solicitud se realizó pero no se recibió respuesta
+        errorMessage = 'No se pudo conectar con el servidor';
       }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, ReactNode } from 'react';
 import Nav from '../../components/nav/NavBar';
 import { useRouter } from 'next/navigation';
@@ -106,6 +105,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     
     fetchUserData();
   }, [router, API_URL]);
+
 
   return (
     <ThemeProvider>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, User, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import authService from '../../services/authService'; // Ajusta la ruta según donde guardes el archivo
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,8 +13,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
-  
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
     // Activar animaciones una vez que el componente se monte
@@ -33,12 +31,15 @@ export default function RegisterPage() {
     
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      
+      // Usar el servicio de autenticación para el registro
+      await authService.register({
         email: formData.email,
+        username: formData.username,
         password: formData.password
       });
       
-      console.log('Usuario registrado:', response.data);
+      console.log('Usuario registrado correctamente');
       router.push('/login');
     } catch (err) {
       console.error('Error al registrar:', err);
