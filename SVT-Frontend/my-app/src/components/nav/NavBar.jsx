@@ -13,6 +13,7 @@ import {
   X,
   Store,
   Users,
+  User,
 } from 'lucide-react';
 
 const Nav = ({ user }) => {
@@ -89,13 +90,21 @@ const Nav = ({ user }) => {
       isActive: activePath.includes('/reportes')
     },
     { 
+      id: 'usuarios', 
+      name: 'Usuarios', 
+      icon: <User size={20} />, 
+      path: '/dashboard/usuarios',
+      isActive: activePath.includes('/usuarios'),
+      onlyAdmin: true, // ← indicador personalizado para filtrado
+    },
+    { 
       id: 'configuracion', 
       name: 'Configuración', 
       icon: <Settings size={20} />, 
       path: '/dashboard/configuracion',
       isActive: activePath.includes('/configuracion')
     },
-  ];
+  ].filter(item => !item.onlyAdmin || user?.rol === 'ADMIN');
 
   const handleLogout = () => {
     localStorage.removeItem('token');

@@ -36,7 +36,7 @@ def crear_producto(
 @router.get("/", response_model=List[schemas.ProductoResponse])
 def listar_productos(
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(get_current_user),  # Cambiado aquí
     skip: int = 0,
     limit: int = 100,
     sku: Optional[str] = None,
@@ -44,9 +44,6 @@ def listar_productos(
     categoria: Optional[str] = None,
     proveedor_id: Optional[int] = None,
 ):
-    """
-    RF1.2: Permite al Jefe de Bodega consultar los productos registrados mediante filtros.
-    """
     productos = producto_service.get_productos(
         db,
         skip=skip,
@@ -63,11 +60,8 @@ def listar_productos(
 def obtener_producto(
     producto_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(get_current_user),  # Cambiado aquí
 ):
-    """
-    RF1.2: Permite al Jefe de Bodega consultar la información detallada de un producto específico.
-    """
     db_producto = producto_service.get_producto(db, producto_id=producto_id)
     if db_producto is None:
         raise HTTPException(
