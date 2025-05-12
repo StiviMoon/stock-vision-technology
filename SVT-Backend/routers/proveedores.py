@@ -34,7 +34,7 @@ def crear_proveedor(
 @router.get("/", response_model=List[schemas.ProveedorResponse])
 def listar_proveedores(
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
     search: Optional[str] = None,

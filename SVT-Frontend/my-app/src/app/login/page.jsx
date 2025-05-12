@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import authService from '../../services/authService'; // Ajusta la ruta según donde guardes el archivo
+import {authService} from '../../services/api'; // Ajusta la ruta según donde guardes el archivo
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
