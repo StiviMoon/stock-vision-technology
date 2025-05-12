@@ -1,108 +1,26 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
-// ---- DEFINICIÓN DE INTERFACES ----
-
-// Interfaces para usuarios
-export interface User {
-  id: number;
-  email: string;
-  rol: string;
-  nombre?: string;
-  lastLogin?: string;
-}
-
-// Interfaces para autenticación
-export interface AuthResponse {
-  access_token: string;
-  token_type: string;
-  user?: User; // Puede no estar incluido en todas las respuestas
-}
-
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  nombre?: string;
-}
-
-export interface RoleUpdate {
-  new_role: string;
-}
-
-// Interfaces para validación de errores (para errores 422)
-export interface ValidationError {
-  detail: Array<{
-    loc: (string | number)[];
-    msg: string;
-    type: string;
-  }>;
-}
-
-// Interfaces para productos
-export interface Producto {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  precio: number;
-  stock: number;
-  categoria?: string;
-  proveedor_id?: number;
-  fecha_creacion?: string;
-  activo: boolean;
-}
-
-export interface ProductoCreate {
-  nombre: string;
-  descripcion?: string;
-  precio: number;
-  stock: number;
-  categoria?: string;
-  proveedor_id?: number;
-}
-
-export interface ProductoUpdate {
-  nombre?: string;
-  descripcion?: string;
-  precio?: number;
-  stock?: number;
-  categoria?: string;
-  proveedor_id?: number;
-  activo?: boolean;
-}
-// Reemplaza estas interfaces en tu archivo services/api.ts
-
-// Interfaces para proveedores
-export interface Proveedor {
-  id: number;
-  nombre: string;
-  codigo: string;
-  contacto?: string;
-  telefono?: string;
-  email?: string;
-  direccion?: string;
-}
-
-export interface ProveedorCreate {
-  nombre: string;
-  codigo: string;
-  contacto?: string;
-  telefono?: string;
-  email?: string;
-  direccion?: string;
-}
-
-export interface ProveedorUpdate {
-  nombre?: string;
-  codigo?: string;
-  contacto?: string;
-  telefono?: string;
-  email?: string;
-  direccion?: string;
-}
+// Importamos todas las interfaces
+import {
+  User,
+  UserCreate,
+  RoleUpdateRequest,
+  RegisterData,
+  Proveedor,
+  ProveedorBase,
+  ProveedorCreate,
+  ProveedorUpdate,
+  ProductoBase,
+  Producto,
+  ProductoCreate,
+  ProductoUpdate,
+  ProductoDetalle,
+  AuthResponse,
+  LoginCredentials,
+  ValidationError,
+  ProductoFilterOptions,
+  NotificationState
+} from './interfaces'; // Asegúrate de que la ruta sea correcta
 
 // ---- CONFIGURACIÓN DE LA API ----
 
@@ -237,7 +155,7 @@ export const userService = {
     try {
       const response = await api.put<User>(`/users/${userId}/role`, { 
         new_role: newRole 
-      });
+      } as RoleUpdateRequest);
       return response.data;
     } catch (error) {
       throw error;
@@ -267,7 +185,7 @@ export const productoService = {
   },
   
   // Obtener todos los productos con filtros opcionales
-  getProductos: async (filtros: Record<string, any> = {}): Promise<Producto[]> => {
+  getProductos: async (filtros: ProductoFilterOptions = {}): Promise<Producto[]> => {
     try {
       const response = await api.get<Producto[]>('/productos/', { params: filtros });
       return response.data;
@@ -277,9 +195,21 @@ export const productoService = {
   },
   
   // Obtener un producto por ID
-  getProducto: async (productoId: number): Promise<Producto> => {
+  getProducto: async (productoId: number): Promise<ProductoDetalle> => {
     try {
-      const response = await api.get<Producto>(`/productos/${productoId}`);
+      const response = await api.get<ProductoDetalle>(`/productos/${productoId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener productos por categoría
+  getProductosByCategoria: async (categoria: string): Promise<Producto[]> => {
+    try {
+      const response = await api.get<Producto[]>('/productos/', { 
+        params: { categoria } 
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -328,6 +258,18 @@ export const proveedorService = {
     }
   },
   
+  // Buscar proveedores por nombre
+  searchProveedoresByNombre: async (nombre: string): Promise<Proveedor[]> => {
+    try {
+      const response = await api.get<Proveedor[]>('/proveedores/', { 
+        params: { nombre } 
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
   // Obtener un proveedor por ID
   getProveedor: async (proveedorId: number): Promise<Proveedor> => {
     try {
@@ -356,6 +298,28 @@ export const proveedorService = {
       throw error;
     }
   }
+};
+
+// Exportar la instancia de API y los tipos para uso en la aplicación
+export type { 
+  User, 
+  UserCreate,
+  RegisterData,
+  RoleUpdateRequest,
+  ProveedorBase,
+  Proveedor, 
+  ProveedorCreate, 
+  ProveedorUpdate,
+  ProductoBase,
+  Producto, 
+  ProductoCreate, 
+  ProductoUpdate,
+  ProductoDetalle,
+  AuthResponse,
+  LoginCredentials,
+  ValidationError,
+  ProductoFilterOptions,
+  NotificationState
 };
 
 export default api;

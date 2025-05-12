@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { 
   MoreHorizontal, 
-  Trash2, 
-  Eye, 
-  UserCog,
-  AlertTriangle
+  Trash2,
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,32 +26,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useRouter } from 'next/navigation';
 
-interface UserActionsProps {
-  userId: number; // Cambiado de string a number para que coincida con la interfaz Usuario
-  userEmail: string;
-  isAdmin: boolean;
-  onDelete: (userId: number) => Promise<void>; // Actualizado para recibir number
-}
+import { UserActionsProps } from '../types';
 
-export function UserActions({ userId, userEmail, isAdmin, onDelete }: UserActionsProps) {
+export function UserActions({ 
+  userId, 
+  userEmail, 
+  isAdmin, 
+  onUserDeleted 
+}: UserActionsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     setIsDeleting(true);
+    setError(null);
+    
     try {
-      await onDelete(userId);
+      // Ya no llamamos al servicio de API directamente, usamos el callback
+      if (onUserDeleted) {
+        await onUserDeleted();
+      }
+      setIsDeleteDialogOpen(false);
+    } catch (err) {
+      console.error("Error al eliminar usuario:", err);
+      setError("No fue posible eliminar el usuario");
     } finally {
       setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
     }
-  };
-
-  const handleViewDetails = () => {
-    router.push(`/usuarios/${userId}`);
   };
 
   return (
@@ -63,19 +65,11 @@ export function UserActions({ userId, userEmail, isAdmin, onDelete }: UserAction
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
+        
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleViewDetails}>
-            <Eye className="mr-2 h-4 w-4" />
-            Ver detalles
-          </DropdownMenuItem>
           {isAdmin && (
             <>
-              <DropdownMenuItem onClick={() => router.push(`/usuarios/${userId}/edit`)}>
-                <UserCog className="mr-2 h-4 w-4" />
-                Editar usuario
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => setIsDeleteDialogOpen(true)}
@@ -89,6 +83,7 @@ export function UserActions({ userId, userEmail, isAdmin, onDelete }: UserAction
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Diálogo de confirmación de eliminación */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -102,6 +97,11 @@ export function UserActions({ userId, userEmail, isAdmin, onDelete }: UserAction
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {error && (
+            <div className="bg-destructive/10 p-3 rounded-md text-destructive text-sm mb-2">
+              {error}
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
@@ -112,7 +112,14 @@ export function UserActions({ userId, userEmail, isAdmin, onDelete }: UserAction
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                'Eliminar'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

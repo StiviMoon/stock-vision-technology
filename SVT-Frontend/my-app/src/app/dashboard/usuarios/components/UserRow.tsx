@@ -1,11 +1,10 @@
-// UserRow.jsx (con corrección)
+'use client';
+
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
 import { UserActions } from './UserActions';
 import { UserRoleSelector } from './UserRoleSelector';
-
-// UserRow.jsx (con importación de tipos)
 import { UserRowProps, getRoleBadgeColor, getRoleDisplayName } from '../types';
 
 export function UserRow({ usuario, onRolChange, onDeleteUser }: UserRowProps) {
@@ -47,7 +46,7 @@ export function UserRow({ usuario, onRolChange, onDeleteUser }: UserRowProps) {
             userId={usuario.id}
             userEmail={usuario.email}
             isAdmin={true} 
-            onDelete={async () => await onDeleteUser(usuario.id)} // Usar async/await aquí
+            onUserDeleted={async () => await onDeleteUser(usuario.id)}
           />
         </div>
       </TableCell>
