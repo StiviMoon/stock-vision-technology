@@ -73,20 +73,22 @@ export interface ProductoUpdate {
   proveedor_id?: number;
   activo?: boolean;
 }
+// Reemplaza estas interfaces en tu archivo services/api.ts
 
 // Interfaces para proveedores
 export interface Proveedor {
   id: number;
   nombre: string;
+  codigo: string;
   contacto?: string;
   telefono?: string;
   email?: string;
   direccion?: string;
-  activo: boolean;
 }
 
 export interface ProveedorCreate {
   nombre: string;
+  codigo: string;
   contacto?: string;
   telefono?: string;
   email?: string;
@@ -95,11 +97,11 @@ export interface ProveedorCreate {
 
 export interface ProveedorUpdate {
   nombre?: string;
+  codigo?: string;
   contacto?: string;
   telefono?: string;
   email?: string;
   direccion?: string;
-  activo?: boolean;
 }
 
 // ---- CONFIGURACIÓN DE LA API ----
