@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import ProveedorDashBoard from './components/ProveedorDashBoard';
 
+
 export default function ProveedoresPage() {
   return (
     <Suspense fallback={

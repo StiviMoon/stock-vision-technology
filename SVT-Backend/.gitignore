@@ -1,0 +1,24 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.python-version
+
+# FastAPI specific
+*.db
+instance/
+*.sqlite3
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.cache/

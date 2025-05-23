@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import auth, users, productos, proveedores
 from database import engine
 import models
+from chatbot.routes import router as chatbot_router
+
+
 
 # Crear las tablas en la base de datos si no existen
 models.Base.metadata.create_all(bind=engine)
@@ -31,7 +34,10 @@ app.include_router(productos.router, prefix="/productos", tags=["Productos"])
 app.include_router(proveedores.router, prefix="/proveedores", tags=["Proveedores"])
 
 
+
 # Ruta de prueba
 @app.get("/")
 def read_root():
     return {"message": "API funcionando correctamente 🚀"}
+
+app.include_router(chatbot_router)
