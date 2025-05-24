@@ -31,7 +31,7 @@ import {
         <div className="border rounded-lg p-8 flex flex-col items-center justify-center bg-background shadow">
           <div className="text-xl font-semibold text-center mb-2">No hay proveedores registrados</div>
           <p className="text-muted-foreground text-center">
-            ¡Agrega tu primer proveedor utilizando el botón "Nuevo Proveedor"!
+            ¡Agrega tu primer proveedor utilizando el botón Nuevo Proveedor!
           </p>
         </div>
       );
