@@ -13,74 +13,51 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Settings, Loader2, Package, ShoppingCart, Utensils, Car, Sparkles, Book, Home, Dumbbell } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import ErrorAlert from './ErrorAlert';
-import { UniversalSKUGenerator } from './SKUGenerator';
-import { proveedorService } from '../../../../services/api';
-import { useRouter } from 'next/navigation';
-
-export default function UniversalProductForm({ 
+import { SKUGenerator } from './SKUGenerator'; // Importamos el generador de SKU
+import { proveedorService } from '../../../../services/api'; // Importamos el servicio de proveedores
+import { useRouter } from 'next/navigation'; 
+export default function ProductoForm({ 
   isOpen, 
   onOpenChange, 
   formMode, 
   initialData, 
-  onSubmit,
-  businessType = null, // Tipo de negocio configurado o null para detección automática
-  existingProducts = [] // Productos existentes para detectar tipo de negocio
+  onSubmit 
 }) {
-  // Estado principal del formulario
+  // Estado para el formulario
   const [formData, setFormData] = useState({
     sku: '',
     nombre: '',
     descripcion: '',
     categoria: '',
+    subcategoria: '',
+    color: '',
+    tamaño: '',
     precio_unitario: 0,
     proveedor_id: '',
     stock_minimo: 0,
-    stock_inicial: 0,
-    // Campos dinámicos que se añaden según el tipo de negocio
+    stock_inicial: 0
   });
 
-  // Estado para configuración dinámica
-  const [currentBusinessType, setCurrentBusinessType] = useState(businessType);
-  const [businessConfig, setBusinessConfig] = useState(null);
-  const [dynamicFields, setDynamicFields] = useState({});
-  
-  // Estados originales (mantener funcionalidad existente)
+  // Estado para proveedores
   const [proveedores, setProveedores] = useState([]);
   const [loadingProveedores, setLoadingProveedores] = useState(false);
   const [proveedorError, setProveedorError] = useState(null);
   const [noProveedoresDisponibles, setNoProveedoresDisponibles] = useState(false);
+
+  // Estado para errores de validación y errores generales
   const [formErrors, setFormErrors] = useState({});
   const [error, setError] = useState(null);
   const [skuManual, setSkuManual] = useState(false);
-  const [showBusinessTypeSelector, setShowBusinessTypeSelector] = useState(false);
 
-  // Detectar tipo de negocio automáticamente
-  useEffect(() => {
-    if (!currentBusinessType) {
-      const detectedType = UniversalSKUGenerator.detectBusinessType(existingProducts);
-      setCurrentBusinessType(detectedType);
-    }
-  }, [existingProducts, currentBusinessType]);
+  // Categorías disponibles
+  const categorias = Object.keys(SKUGenerator.CATEGORY_PREFIXES).map(cat => ({
+    value: cat,
+    label: cat.charAt(0) + cat.slice(1).toLowerCase()
+  }));
 
-  // Configurar campos dinámicos según tipo de negocio
-  useEffect(() => {
-    if (currentBusinessType) {
-      const config = UniversalSKUGenerator.getBusinessConfig(currentBusinessType);
-      setBusinessConfig(config);
-      
-      // Inicializar campos dinámicos
-      const newDynamicFields = {};
-      config.attributes.forEach(attr => {
-        newDynamicFields[attr] = '';
-      });
-      setDynamicFields(newDynamicFields);
-    }
-  }, [currentBusinessType]);
-
-  // Cargar proveedores (mantener lógica original)
+  // Cargar proveedores al montar el componente
   useEffect(() => {
     const fetchProveedores = async () => {
       setLoadingProveedores(true);
@@ -88,7 +65,13 @@ export default function UniversalProductForm({
       try {
         const data = await proveedorService.getProveedores();
         setProveedores(data);
-        setNoProveedoresDisponibles(data.length === 0);
+        
+        // Verificar si hay proveedores disponibles
+        if (data.length === 0) {
+          setNoProveedoresDisponibles(true);
+        } else {
+          setNoProveedoresDisponibles(false);
+        }
       } catch (error) {
         console.error("Error al cargar proveedores:", error);
         setProveedorError("No se pudieron cargar los proveedores");
@@ -100,104 +83,85 @@ export default function UniversalProductForm({
     fetchProveedores();
   }, []);
 
-  // Resetear formulario según modo
+  // Actualizar el formulario cuando cambia el modo o los datos iniciales
   useEffect(() => {
     if (formMode === 'create') {
-      const newFormData = {
+      setFormData({
         sku: '',
         nombre: '',
         descripcion: '',
         categoria: '',
+        subcategoria: '',
+        color: '',
+        tamaño: '',
         precio_unitario: 0,
         proveedor_id: proveedores.length > 0 ? proveedores[0].id.toString() : '',
         stock_minimo: 0,
         stock_inicial: 0
-      };
-      
-      // Añadir campos dinámicos
-      if (businessConfig) {
-        businessConfig.attributes.forEach(attr => {
-          newFormData[attr] = '';
-        });
-      }
-      
-      setFormData(newFormData);
+      });
       setSkuManual(false);
     } else if (initialData) {
-      const newFormData = {
+      setFormData({
         sku: initialData.sku || '',
         nombre: initialData.nombre || '',
         descripcion: initialData.descripcion || '',
         categoria: initialData.categoria || '',
+        subcategoria: initialData.subcategoria || '',
+        color: initialData.color || '',
+        tamaño: initialData.tamaño || '',
         precio_unitario: typeof initialData.precio_unitario === 'number' ? initialData.precio_unitario : 0,
         proveedor_id: initialData.proveedor_id ? initialData.proveedor_id.toString() : '',
         stock_minimo: typeof initialData.stock_minimo === 'number' ? initialData.stock_minimo : 0,
         stock_actual: typeof initialData.stock_actual === 'number' ? initialData.stock_actual : 0
-      };
-      
-      // Añadir campos dinámicos del producto existente
-      if (businessConfig) {
-        businessConfig.attributes.forEach(attr => {
-          newFormData[attr] = initialData[attr] || '';
-        });
-      }
-      
-      setFormData(newFormData);
-      setSkuManual(true);
+      });
+      setSkuManual(true); // En edición asumimos que el SKU ya existe
     }
     setFormErrors({});
     setError(null);
-  }, [formMode, initialData, isOpen, proveedores, businessConfig]);
+  }, [formMode, initialData, isOpen, proveedores]);
 
-  // Generar SKU automáticamente
+  // Generar SKU automáticamente cuando se modifican los campos relevantes
   useEffect(() => {
-    if (!skuManual && formMode === 'create' && formData.categoria && businessConfig) {
-      // Verificar campos requeridos según configuración
-      const hasRequiredFields = businessConfig.required.every(field => formData[field]);
+    // Solo generar automáticamente si no está en modo manual y hay suficientes datos
+    if (!skuManual && formMode === 'create' && formData.nombre && formData.categoria) {
+      // Generamos un ID temporal para el SKU (en una aplicación real usarías un contador o timestamp)
+      const tempProduct = {
+        ...formData,
+        id: Date.now() % 1000000 // Simulamos un ID para el producto
+      };
       
-      if (hasRequiredFields) {
-        const tempProduct = {
-          ...formData,
-          ...dynamicFields,
-          id: Date.now() % 1000000
-        };
-        
-        const generatedSKU = UniversalSKUGenerator.generateSKU(tempProduct, currentBusinessType);
-        setFormData(prev => ({
-          ...prev,
-          sku: generatedSKU
-        }));
-      }
+      const generatedSKU = SKUGenerator.generateSKU(tempProduct);
+      setFormData(prev => ({
+        ...prev,
+        sku: generatedSKU
+      }));
     }
-  }, [formData, dynamicFields, skuManual, formMode, businessConfig, currentBusinessType]);
+  }, [formData.nombre, formData.categoria, formData.subcategoria, formData.color, formData.tamaño, skuManual, formMode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
+    // Asegurarnos de que los valores numéricos siempre tengan un valor definido
     let processedValue;
     if (['precio_unitario', 'stock_minimo', 'stock_inicial', 'stock_actual'].includes(name)) {
+      // Para campos numéricos, usar 0 si el valor está vacío o no es numérico
       processedValue = value === '' ? 0 : parseFloat(value) || 0;
     } else {
+      // Para campos de texto, usar el valor tal cual
       processedValue = value;
     }
     
-    // Actualizar en formData o dynamicFields según corresponda
-    if (['sku', 'nombre', 'descripcion', 'categoria', 'precio_unitario', 'proveedor_id', 'stock_minimo', 'stock_inicial', 'stock_actual'].includes(name)) {
-      setFormData({
-        ...formData,
-        [name]: processedValue
-      });
-    } else {
-      setDynamicFields({
-        ...dynamicFields,
-        [name]: processedValue
-      });
-    }
+    setFormData({
+      ...formData,
+      [name]: processedValue
+    });
     
+    // Si el usuario modifica manualmente el SKU, pasamos a modo manual
     if (name === 'sku') {
       setSkuManual(true);
     }
     
+    // Limpiar el error específico al cambiar el campo
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -206,20 +170,14 @@ export default function UniversalProductForm({
     }
   };
 
+  // Función para manejar cambios en selects (para categoría, subcategoría, etc)
   const handleSelectChange = (name, value) => {
-    // Similar lógica para selects
-    if (['categoria', 'proveedor_id'].includes(name)) {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    } else {
-      setDynamicFields({
-        ...dynamicFields,
-        [name]: value
-      });
-    }
+    setFormData({
+      ...formData,
+      [name]: value
+    });
     
+    // Limpiar el error específico al cambiar el campo
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -231,14 +189,14 @@ export default function UniversalProductForm({
   const toggleSkuMode = () => {
     setSkuManual(!skuManual);
     
-    if (skuManual && formData.categoria && businessConfig) {
+    // Si volvemos al modo automático, regenerar el SKU
+    if (skuManual && formData.nombre && formData.categoria) {
       const tempProduct = {
         ...formData,
-        ...dynamicFields,
         id: Date.now() % 1000000
       };
       
-      const generatedSKU = UniversalSKUGenerator.generateSKU(tempProduct, currentBusinessType);
+      const generatedSKU = SKUGenerator.generateSKU(tempProduct);
       setFormData(prev => ({
         ...prev,
         sku: generatedSKU
@@ -249,6 +207,7 @@ export default function UniversalProductForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validar que se haya seleccionado un proveedor
     if (!formData.proveedor_id) {
       setFormErrors({
         ...formErrors,
@@ -257,15 +216,13 @@ export default function UniversalProductForm({
       return;
     }
     
-    // Combinar datos estáticos con dinámicos
+    // Asegurarse de convertir los valores numéricos correctamente
     const productoData = {
       ...formData,
-      ...dynamicFields,
       precio_unitario: parseFloat(formData.precio_unitario) || 0,
       proveedor_id: parseInt(formData.proveedor_id) || 0,
       stock_minimo: parseInt(formData.stock_minimo) || 0,
-      stock_inicial: parseInt(formData.stock_inicial) || 0,
-      business_type: currentBusinessType // Guardar tipo de negocio
+      stock_inicial: parseInt(formData.stock_inicial) || 0
     };
     
     const result = await onSubmit(productoData);
@@ -280,113 +237,45 @@ export default function UniversalProductForm({
     }
   };
 
-  const getBusinessIcon = (type) => {
-    const icons = {
-      ELECTRONICS: <Package className="h-4 w-4" />,
-      CLOTHING: <ShoppingCart className="h-4 w-4" />,
-      FOOD: <Utensils className="h-4 w-4" />,
-      AUTOMOTIVE: <Car className="h-4 w-4" />,
-      BEAUTY: <Sparkles className="h-4 w-4" />,
-      BOOKS: <Book className="h-4 w-4" />,
-      FURNITURE: <Home className="h-4 w-4" />,
-      SPORTS: <Dumbbell className="h-4 w-4" />,
-      GENERIC: <Package className="h-4 w-4" />
-    };
-    return icons[type] || icons.GENERIC;
-  };
-
-  const getFieldOptions = (fieldName) => {
-    switch (fieldName) {
-      case 'color':
-        return Object.entries(UniversalSKUGenerator.UNIVERSAL_ATTRIBUTES.colors).map(([key, value]) => ({
-          value: key,
-          label: key.charAt(0) + key.slice(1).toLowerCase()
-        }));
-      
-      case 'talla':
-      case 'tamaño':
-        return Object.entries(UniversalSKUGenerator.UNIVERSAL_ATTRIBUTES.sizes).map(([key, value]) => ({
-          value: key,
-          label: key
-        }));
-      
-      case 'material':
-        return Object.entries(UniversalSKUGenerator.UNIVERSAL_ATTRIBUTES.materials).map(([key, value]) => ({
-          value: key,
-          label: key.charAt(0) + key.slice(1).toLowerCase()
-        }));
-      
-      case 'presentacion':
-        return Object.entries(UniversalSKUGenerator.UNIVERSAL_ATTRIBUTES.presentations).map(([key, value]) => ({
-          value: key,
-          label: key.charAt(0) + key.slice(1).toLowerCase()
-        }));
-      
-      case 'genero':
-        return [
-          { value: 'HOMBRE', label: 'Hombre' },
-          { value: 'MUJER', label: 'Mujer' },
-          { value: 'UNISEX', label: 'Unisex' },
-          { value: 'NIÑO', label: 'Niño' },
-          { value: 'NIÑA', label: 'Niña' }
-        ];
-      
-      default:
-        return null;
-    }
-  };
-
-  const renderDynamicField = (fieldName) => {
-    const options = getFieldOptions(fieldName);
-    const value = dynamicFields[fieldName] || '';
-    const isRequired = businessConfig?.required.includes(fieldName);
+  // Obtenemos las subcategorías basadas en la categoría seleccionada
+  const getSubcategorias = () => {
+    if (!formData.categoria) return [];
     
-    if (options) {
-      // Campo select
-      return (
-        <div key={fieldName} className="grid gap-2">
-          <Label htmlFor={fieldName} className={formErrors[fieldName] ? "text-destructive" : ""}>
-            {fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ')}
-            {isRequired && <span className="text-destructive"> *</span>}
-          </Label>
-          <Select
-            value={value}
-            onValueChange={(val) => handleSelectChange(fieldName, val)}
-          >
-            <SelectTrigger className={formErrors[fieldName] ? "border-destructive" : ""}>
-              <SelectValue placeholder={`Seleccionar ${fieldName}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {formErrors[fieldName] && <p className="text-sm text-destructive">{formErrors[fieldName]}</p>}
-        </div>
-      );
-    } else {
-      // Campo input
-      return (
-        <FormField
-          key={fieldName}
-          id={fieldName}
-          label={fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ')}
-          value={value}
-          onChange={handleInputChange}
-          error={formErrors[fieldName]}
-          required={isRequired}
-          placeholder={`Ingrese ${fieldName}`}
-        />
-      );
-    }
+    // Intentamos obtener subcategorías para la categoría seleccionada
+    const subCategories = {};
+    Object.keys(SKUGenerator.SUBCATEGORY_CODES).forEach(subcat => {
+      // Asignamos subcategorías a categorías (esto es una simplificación, deberías ajustarlo a tu lógica de negocio)
+      if (formData.categoria === 'ELECTRONICA' && ['CELULARES', 'COMPUTADORAS', 'TABLETS', 'AUDIO', 'TELEVISORES'].includes(subcat)) {
+        subCategories[subcat] = subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
+      } else if (formData.categoria === 'ROPA' && ['CAMISETAS', 'PANTALONES', 'VESTIDOS', 'ABRIGOS', 'ROPA_INTERIOR'].includes(subcat)) {
+        subCategories[subcat] = subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
+      } else if (formData.categoria === 'CALZADO' && ['ZAPATOS', 'DEPORTIVOS', 'BOTAS', 'SANDALIAS'].includes(subcat)) {
+        subCategories[subcat] = subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
+      }
+      // Añade más categorías y subcategorías según sea necesario
+    });
+    
+    return Object.entries(subCategories).map(([value, label]) => ({ value, label }));
   };
+
+  // Obtenemos los colores disponibles
+  const colores = Object.keys(SKUGenerator.ATTRIBUTE_CODES)
+    .filter(attr => ['BLANCO', 'NEGRO', 'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'GRIS', 'MARRON', 'ROSA', 'MORADO'].includes(attr))
+    .map(color => ({
+      value: color,
+      label: color.charAt(0) + color.slice(1).toLowerCase()
+    }));
+
+  // Obtenemos los tamaños disponibles
+  const tamaños = ['PEQUENO', 'MEDIANO', 'GRANDE', 'EXTRA_GRANDE'].map(tamaño => ({
+    value: tamaño,
+    label: tamaño.charAt(0) + tamaño.slice(1).toLowerCase().replace('_', ' ')
+  }));
 
   const router = useRouter();
+  
 
-  // Manejo de caso sin proveedores
+  // Si no hay proveedores disponibles, mostrar una alerta y no permitir crear el producto
   if (noProveedoresDisponibles && !loadingProveedores) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -406,13 +295,22 @@ export default function UniversalProductForm({
           </Alert>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+            >
               Cerrar
             </Button>
-            <Button type="button" onClick={() => {
-              onOpenChange(false);
-              router.push('/dashboard/proveedores');
-            }}>
+            <Button 
+              type="button" 
+              onClick={() => {
+                onOpenChange(false);
+                router.push('/dashboard/proveedores');
+                // Aquí podrías añadir una redirección a la página de creación de proveedores
+                // window.location.href = '/dashboard/proveedores';
+              }}
+            >
               Ir a Proveedores
             </Button>
           </DialogFooter>
@@ -421,248 +319,263 @@ export default function UniversalProductForm({
     );
   }
 
-  if (!businessConfig) {
-    return null; // Loading state
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[950px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[850px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {getBusinessIcon(currentBusinessType)}
+          <DialogTitle>
             {formMode === 'create' ? 'Crear Nuevo Producto' : 'Editar Producto'}
-            <Badge variant="secondary" className="ml-2">
-              {businessConfig.name}
-            </Badge>
           </DialogTitle>
           <DialogDescription>
-            Completa los campos para {formMode === 'create' ? 'crear un nuevo' : 'actualizar el'} producto.
-            {!businessType && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowBusinessTypeSelector(!showBusinessTypeSelector)}
-                className="ml-2"
-              >
-                <Settings className="h-4 w-4 mr-1" />
-                Cambiar tipo de negocio
-              </Button>
-            )}
+            Completa los campos para {formMode === 'create' ? 'crear un nuevo' : 'actualizar el'} producto
           </DialogDescription>
         </DialogHeader>
-
-        {showBusinessTypeSelector && (
-          <div className="grid gap-2 p-4 border rounded-lg bg-muted/50">
-            <Label>Tipo de Negocio</Label>
-            <Select
-              value={currentBusinessType}
-              onValueChange={(value) => {
-                setCurrentBusinessType(value);
-                setShowBusinessTypeSelector(false);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar tipo de negocio" />
-              </SelectTrigger>
-              <SelectContent>
-                {UniversalSKUGenerator.getAllBusinessTypes().map((business) => (
-                  <SelectItem key={business.value} value={business.value}>
-                    <div className="flex items-center gap-2">
-                      {getBusinessIcon(business.value)}
-                      {business.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
         
         {error && <ErrorAlert error={error} className="my-2" />}
         
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Fila 1: Información básica */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* SKU */}
-              <div className="grid gap-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="sku" className={formErrors.sku ? "text-destructive" : ""}>
-                    SKU
+              {/* Columna 1: SKU y Nombre */}
+              <div className="space-y-4">
+                {/* Campo SKU con toggle para modo manual/automático */}
+                <div className="grid gap-2">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="sku" className={formErrors.sku ? "text-destructive" : ""}>
+                      SKU
+                    </Label>
+                    {formMode === 'create' && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={toggleSkuMode}
+                        className="h-6 text-xs"
+                      >
+                        {skuManual ? "Generar auto" : "Modo manual"}
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    id="sku"
+                    name="sku"
+                    value={formData.sku}
+                    onChange={handleInputChange}
+                    className={formErrors.sku ? "border-destructive" : ""}
+                    required
+                    readOnly={!skuManual}
+                  />
+                  {!skuManual && (
+                    <p className="text-xs text-muted-foreground">
+                      El SKU se genera automáticamente basado en las características del producto.
+                    </p>
+                  )}
+                  {formErrors.sku && <p className="text-sm text-destructive">{formErrors.sku}</p>}
+                </div>
+                
+                <FormField
+                  id="nombre"
+                  label="Nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  error={formErrors.nombre}
+                  required
+                />
+                
+                {/* Información precios y stock */}
+                <FormField
+                  id="precio_unitario"
+                  label="Precio Unitario"
+                  value={formData.precio_unitario}
+                  onChange={handleInputChange}
+                  error={formErrors.precio_unitario}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+              
+              {/* Columna 2: Categorías, Subcategorías y Proveedor */}
+              <div className="space-y-4">
+                {/* Categoría con Select */}
+                <div className="grid gap-2">
+                  <Label htmlFor="categoria" className={formErrors.categoria ? "text-destructive" : ""}>
+                    Categoría
                   </Label>
-                  {formMode === 'create' && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={toggleSkuMode}
-                      className="h-6 text-xs"
-                    >
-                      {skuManual ? "Generar auto" : "Modo manual"}
-                    </Button>
+                  <Select
+                    value={formData.categoria}
+                    onValueChange={(value) => handleSelectChange('categoria', value)}
+                  >
+                    <SelectTrigger className={formErrors.categoria ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Seleccionar categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categorias.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.categoria && <p className="text-sm text-destructive">{formErrors.categoria}</p>}
+                </div>
+                
+                {/* Subcategoría con Select */}
+                <div className="grid gap-2">
+                  <Label htmlFor="subcategoria" className={formErrors.subcategoria ? "text-destructive" : ""}>
+                    Subcategoría
+                  </Label>
+                  <Select
+                    value={formData.subcategoria}
+                    onValueChange={(value) => handleSelectChange('subcategoria', value)}
+                    disabled={!formData.categoria}
+                  >
+                    <SelectTrigger className={formErrors.subcategoria ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Seleccionar subcategoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getSubcategorias().map((subcat) => (
+                        <SelectItem key={subcat.value} value={subcat.value}>
+                          {subcat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.subcategoria && <p className="text-sm text-destructive">{formErrors.subcategoria}</p>}
+                </div>
+                
+                {/* Selector de Proveedor mejorado */}
+                <div className="grid gap-2">
+                  <Label htmlFor="proveedor_id" className={formErrors.proveedor_id ? "text-destructive" : ""}>
+                    Proveedor <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.proveedor_id.toString()}
+                    onValueChange={(value) => handleSelectChange('proveedor_id', value)}
+                    disabled={loadingProveedores}
+                  >
+                    <SelectTrigger className={formErrors.proveedor_id ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Seleccionar proveedor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loadingProveedores ? (
+                        <SelectItem value="loading" disabled>
+                          <div className="flex items-center">
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Cargando proveedores...
+                          </div>
+                        </SelectItem>
+                      ) : proveedorError ? (
+                        <SelectItem value="error" disabled>
+                          Error al cargar proveedores
+                        </SelectItem>
+                      ) : proveedores.length > 0 ? (
+                        proveedores.map((proveedor) => (
+                          <SelectItem key={proveedor.id} value={proveedor.id.toString()}>
+                            {proveedor.nombre} {proveedor.codigo ? `(${proveedor.codigo})` : ''}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No hay proveedores disponibles
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.proveedor_id && <p className="text-sm text-destructive">{formErrors.proveedor_id}</p>}
+                  {proveedorError && <p className="text-xs text-destructive">{proveedorError}</p>}
+                </div>
+              </div>
+              
+              {/* Columna 3: Atributos y Stock */}
+              <div className="space-y-4">
+                {/* Atributos (color y tamaño) */}
+                <div className="grid gap-2">
+                  <Label htmlFor="color" className={formErrors.color ? "text-destructive" : ""}>
+                    Color
+                  </Label>
+                  <Select
+                    value={formData.color}
+                    onValueChange={(value) => handleSelectChange('color', value)}
+                  >
+                    <SelectTrigger className={formErrors.color ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Seleccionar color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colores.map((color) => (
+                        <SelectItem key={color.value} value={color.value}>
+                          {color.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.color && <p className="text-sm text-destructive">{formErrors.color}</p>}
+                </div>
+                
+                {/* Tamaño */}
+                <div className="grid gap-2">
+                  <Label htmlFor="tamaño" className={formErrors.tamaño ? "text-destructive" : ""}>
+                    Tamaño
+                  </Label>
+                  <Select
+                    value={formData.tamaño}
+                    onValueChange={(value) => handleSelectChange('tamaño', value)}
+                  >
+                    <SelectTrigger className={formErrors.tamaño ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Seleccionar tamaño" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tamaños.map((tamaño) => (
+                        <SelectItem key={tamaño.value} value={tamaño.value}>
+                          {tamaño.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.tamaño && <p className="text-sm text-destructive">{formErrors.tamaño}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    id="stock_minimo"
+                    label="Stock Mínimo"
+                    value={formData.stock_minimo}
+                    onChange={handleInputChange}
+                    error={formErrors.stock_minimo}
+                    type="number"
+                    min="0"
+                    required
+                  />
+                  
+                  {formMode === 'create' ? (
+                    <FormField
+                      id="stock_inicial"
+                      label="Stock Inicial"
+                      value={formData.stock_inicial}
+                      onChange={handleInputChange}
+                      error={formErrors.stock_inicial}
+                      type="number"
+                      min="0"
+                      required
+                    />
+                  ) : (
+                    <FormField
+                      id="stock_actual"
+                      label="Stock Actual"
+                      value={formData.stock_actual}
+                      onChange={handleInputChange}
+                      error={formErrors.stock_actual}
+                      type="number"
+                      min="0"
+                      required
+                    />
                   )}
                 </div>
-                <Input
-                  id="sku"
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleInputChange}
-                  className={formErrors.sku ? "border-destructive" : ""}
-                  required
-                  readOnly={!skuManual}
-                />
-                {!skuManual && (
-                  <p className="text-xs text-muted-foreground">
-                    SKU generado automáticamente según {businessConfig.name.toLowerCase()}.
-                  </p>
-                )}
-                {formErrors.sku && <p className="text-sm text-destructive">{formErrors.sku}</p>}
               </div>
-
-              {/* Nombre */}
-              <FormField
-                id="nombre"
-                label="Nombre del Producto"
-                value={formData.nombre}
-                onChange={handleInputChange}
-                error={formErrors.nombre}
-                required
-              />
-
-              {/* Precio */}
-              <FormField
-                id="precio_unitario"
-                label="Precio Unitario"
-                value={formData.precio_unitario}
-                onChange={handleInputChange}
-                error={formErrors.precio_unitario}
-                type="number"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-
-            {/* Fila 2: Categoría y campos dinámicos principales */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Categoría */}
-              <div className="grid gap-2">
-                <Label htmlFor="categoria" className={formErrors.categoria ? "text-destructive" : ""}>
-                  Categoría <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.categoria}
-                  onValueChange={(value) => handleSelectChange('categoria', value)}
-                >
-                  <SelectTrigger className={formErrors.categoria ? "border-destructive" : ""}>
-                    <SelectValue placeholder="Seleccionar categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(businessConfig.categories).map(([key, value]) => (
-                      <SelectItem key={key} value={key}>
-                        {key.charAt(0) + key.slice(1).toLowerCase().replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formErrors.categoria && <p className="text-sm text-destructive">{formErrors.categoria}</p>}
-              </div>
-
-              {/* Campos dinámicos principales (primeros 3) */}
-              {businessConfig.attributes.slice(0, 3).map(attr => renderDynamicField(attr))}
-            </div>
-
-            {/* Fila 3: Campos dinámicos adicionales */}
-            {businessConfig.attributes.length > 3 && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {businessConfig.attributes.slice(3).map(attr => renderDynamicField(attr))}
-              </div>
-            )}
-
-            {/* Fila 4: Proveedor y Stock */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Proveedor */}
-              <div className="grid gap-2">
-                <Label htmlFor="proveedor_id" className={formErrors.proveedor_id ? "text-destructive" : ""}>
-                  Proveedor <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.proveedor_id.toString()}
-                  onValueChange={(value) => handleSelectChange('proveedor_id', value)}
-                  disabled={loadingProveedores}
-                >
-                  <SelectTrigger className={formErrors.proveedor_id ? "border-destructive" : ""}>
-                    <SelectValue placeholder="Seleccionar proveedor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingProveedores ? (
-                      <SelectItem value="loading" disabled>
-                        <div className="flex items-center">
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Cargando proveedores...
-                        </div>
-                      </SelectItem>
-                    ) : proveedorError ? (
-                      <SelectItem value="error" disabled>
-                        Error al cargar proveedores
-                      </SelectItem>
-                    ) : proveedores.length > 0 ? (
-                      proveedores.map((proveedor) => (
-                        <SelectItem key={proveedor.id} value={proveedor.id.toString()}>
-                          {proveedor.nombre} {proveedor.codigo ? `(${proveedor.codigo})` : ''}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>
-                        No hay proveedores disponibles
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                {formErrors.proveedor_id && <p className="text-sm text-destructive">{formErrors.proveedor_id}</p>}
-              </div>
-
-              {/* Stock Mínimo */}
-              <FormField
-                id="stock_minimo"
-                label="Stock Mínimo"
-                value={formData.stock_minimo}
-                onChange={handleInputChange}
-                error={formErrors.stock_minimo}
-                type="number"
-                min="0"
-                required
-              />
-              
-              {/* Stock Inicial/Actual */}
-              {formMode === 'create' ? (
-                <FormField
-                  id="stock_inicial"
-                  label="Stock Inicial"
-                  value={formData.stock_inicial}
-                  onChange={handleInputChange}
-                  error={formErrors.stock_inicial}
-                  type="number"
-                  min="0"
-                  required
-                />
-              ) : (
-                <FormField
-                  id="stock_actual"
-                  label="Stock Actual"
-                  value={formData.stock_actual}
-                  onChange={handleInputChange}
-                  error={formErrors.stock_actual}
-                  type="number"
-                  min="0"
-                  required
-                />
-              )}
             </div>
             
-            {/* Descripción a ancho completo */}
+            {/* Descripción a ancho completo en la parte inferior */}
             <FormField
               id="descripcion"
               label="Descripción"
@@ -671,7 +584,6 @@ export default function UniversalProductForm({
               error={formErrors.descripcion}
               required
               isTextarea
-              placeholder="Describe las características del producto..."
             />
           </div>
           
@@ -680,7 +592,7 @@ export default function UniversalProductForm({
               Cancelar
             </Button>
             <Button type="submit">
-              {formMode === 'create' ? 'Crear Producto' : 'Actualizar'}
+              {formMode === 'create' ? 'Crear' : 'Actualizar'}
             </Button>
           </DialogFooter>
         </form>
@@ -689,7 +601,7 @@ export default function UniversalProductForm({
   );
 }
 
-// Componente auxiliar para campos de formulario (mantener igual)
+// Componente auxiliar para campos de formulario
 function FormField({ 
   id, 
   label, 
@@ -700,8 +612,7 @@ function FormField({
   type = "text", 
   min, 
   step,
-  isTextarea = false,
-  placeholder = ""
+  isTextarea = false 
 }) {
   const Component = isTextarea ? Textarea : Input;
   
@@ -720,7 +631,6 @@ function FormField({
         required={required}
         min={min}
         step={step}
-        placeholder={placeholder}
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
