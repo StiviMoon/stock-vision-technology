@@ -194,9 +194,9 @@ const ChatPage: React.FC<ChatPageProps> = ({
               variant="outline"
               size="sm"
               className="rounded-full text-xs border-muted-foreground/20 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
-              onClick={() => sendMessage("¿Cómo revisar el inventario?")}
+              onClick={() => sendMessage("Ver estadisticas del inventario")}
             >
-              ¿Cómo revisar el inventario?
+              Ver estadisticas del inventario
             </Button>
             <Button
               variant="outline"
@@ -210,9 +210,9 @@ const ChatPage: React.FC<ChatPageProps> = ({
               variant="outline"
               size="sm"
               className="rounded-full text-xs border-muted-foreground/20 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
-              onClick={() => sendMessage("Generar reporte de ventas")}
+              onClick={() => sendMessage("Generar reporte de sistema")}
             >
-              Generar reporte de ventas
+              Generar reporte del sistema
             </Button>
           </div>
         </div>

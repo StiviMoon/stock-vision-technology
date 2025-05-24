@@ -186,17 +186,17 @@ class InventoryAIAssistant:
 
             analysis = f"""📊 **Estadísticas del Sistema SVT**
 
-🔢 **Números Generales:**
-• Total de productos: {stats.total_productos:,}
-• Total de unidades en stock: {stats.total_unidades:,}
-• Valor total del inventario: ${stats.valor_total_inventario:,.2f}
-• Precio promedio por producto: ${stats.precio_promedio:.2f}
-• Categorías diferentes: {stats.total_categorias}
-• Proveedores activos: {stats.total_proveedores}
-• Productos con stock bajo: {stats.productos_stock_bajo} ⚠️
+                🔢 **Números Generales:**
+                • Total de productos: {stats.total_productos:,}
+                • Total de unidades en stock: {stats.total_unidades:,}
+                • Valor total del inventario: ${stats.valor_total_inventario:,.2f}
+                • Precio promedio por producto: ${stats.precio_promedio:.2f}
+                • Categorías diferentes: {stats.total_categorias}
+                • Proveedores activos: {stats.total_proveedores}
+                • Productos con stock bajo: {stats.productos_stock_bajo} ⚠️
 
-🏷️ **Top Categorías:**
-"""
+                🏷️ **Top Categorías:**
+                """
             for cat in categories:
                 analysis += f"• {cat.categoria}: {cat.cantidad_productos} productos "
                 analysis += (
