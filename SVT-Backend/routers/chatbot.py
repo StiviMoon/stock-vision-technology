@@ -93,29 +93,34 @@ async def get_quick_actions():
             example_query="¿Qué productos tienen stock bajo?",
         ),
         QuickAction(
-            action="buscar_producto",
-            description="Buscar productos específicos",
-            example_query="Buscar laptop",
-        ),
-        QuickAction(
             action="estadisticas",
-            description="Ver estadísticas del inventario",
-            example_query="Muéstrame las estadísticas del inventario",
+            description="Ver estadísticas generales del inventario",
+            example_query="Muéstrame las estadísticas generales del inventario",
         ),
         QuickAction(
             action="proveedores",
-            description="Información sobre proveedores",
-            example_query="¿Cuáles son nuestros principales proveedores?",
+            description="Ver lista de proveedores",
+            example_query="¿Cuáles son nuestros proveedores?",
         ),
         QuickAction(
             action="valor_inventario",
-            description="Calcular valor total del inventario",
+            description="Consultar valor total del inventario",
             example_query="¿Cuál es el valor total del inventario?",
         ),
         QuickAction(
             action="productos_categoria",
             description="Ver productos por categoría",
-            example_query="¿Qué productos tenemos en electrónicos?",
+            example_query="¿Qué productos hay en la categoría electrónicos?",
+        ),
+        QuickAction(
+            action="ultimos_movimientos",
+            description="Ver últimos movimientos de inventario",
+            example_query="¿Cuáles fueron los últimos movimientos de inventario?",
+        ),
+        QuickAction(
+            action="alertas",
+            description="Ver alertas o incidencias recientes",
+            example_query="¿Hay alertas o incidencias recientes en el inventario?",
         ),
     ]
     return {"quick_actions": actions}

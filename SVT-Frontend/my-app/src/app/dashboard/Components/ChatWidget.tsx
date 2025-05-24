@@ -123,18 +123,16 @@ const ChatWidget = ({
             {/* Icono del bot */}
             <Bot className="h-8 w-8 text-primary-foreground relative z-10 transition-transform duration-300" />
             
-            {/* Indicador de mensajes no leídos */}
-            {unreadCount > 0 && (
+            
+            
+          </button>
+
+          {/* Indicador de mensajes no leídos */}
+          {unreadCount > 0 && (
               <div className="absolute -top-1 -left-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center shadow-lg animate-bounce">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </div>
             )}
-            
-            {/* Ondas de pulso solo si hay mensajes nuevos */}
-            {unreadCount > 0 && (
-              <div className="absolute inset-0 rounded-full bg-destructive animate-ping opacity-20" />
-            )}
-          </button>
           
           {/* Indicador de estado */}
           <div className={`absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-background flex items-center justify-center shadow-lg transition-all duration-300 ${

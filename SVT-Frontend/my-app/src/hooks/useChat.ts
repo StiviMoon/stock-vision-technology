@@ -148,23 +148,26 @@ export const useChat = ({
 
   // Inicializar chat (con prevención de duplicados)
   const initializeChat = useCallback(() => {
-    if (isInitialized) return // Prevenir inicialización duplicada
-    
-    const userName = user?.email ? user.email.split('@')[0] : 'Usuario'
-    
-    const welcomeMessage = `¡Hola ${userName}! 👋
-
-Soy tu asistente inteligente para el Sistema SVT.
-
-Puedo ayudarte con:
- Consultas de productos y stock
- Estadísticas del inventario
- Información de proveedores
- Análisis y reportes
-
-¿Qué necesitas saber?`
-
-    addMessage(welcomeMessage, 'bot', 'system')
+    if (isInitialized) return
+  
+    const welcomeShown = localStorage.getItem('svt-welcome-shown')
+    if (!welcomeShown) {
+      const userName = user?.email ? user.email.split('@')[0] : 'Usuario'
+      const welcomeMessage = `¡Hola ${userName}! 👋
+  
+  Soy tu asistente inteligente para el Sistema SVT.
+  
+  Puedo ayudarte con:
+   Consultas de productos y stock
+   Estadísticas del inventario
+   Información de proveedores
+   Análisis y reportes
+  
+  ¿Qué necesitas saber?`
+      addMessage(welcomeMessage, 'bot', 'system')
+      localStorage.setItem('svt-welcome-shown', 'true')
+    }
+  
     fetchQuickActions()
     setInitialized(true)
   }, [user, isInitialized, addMessage, fetchQuickActions, setInitialized])

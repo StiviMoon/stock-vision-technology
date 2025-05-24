@@ -15,6 +15,7 @@ import {
 import { useChat } from '@/src/hooks/useChat'
 import { ChatMessage } from '../Components/chat/ChatMessage'
 import { LoadingIndicator } from '../Components/chat/LoadingIndicator'
+import { useChatStore } from '@/src/app/stores/chatStore'
 
 // Definir tipo Message si no está definido
 interface Message {
@@ -78,6 +79,9 @@ const ChatPage: React.FC<ChatPageProps> = ({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  // Obtén las acciones rápidas del store
+  const quickActions = useChatStore((state) => state.quickActions)
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-gradient-to-b from-background to-muted/20">
@@ -187,33 +191,20 @@ const ChatPage: React.FC<ChatPageProps> = ({
                 : "Escribe tu pregunta aquí..."
             }
           />
-          
-          {/* Sugerencias rápidas */}
+
+          {/* Acciones rápidas personalizadas desde backend */}
           <div className="flex gap-2 mt-3 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full text-xs border-muted-foreground/20 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
-              onClick={() => sendMessage("Ver estadisticas del inventario")}
-            >
-              Ver estadisticas del inventario
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full text-xs border-muted-foreground/20 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
-              onClick={() => sendMessage("Ver productos con bajo stock")}
-            >
-              Ver productos con bajo stock
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full text-xs border-muted-foreground/20 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
-              onClick={() => sendMessage("Generar reporte de sistema")}
-            >
-              Generar reporte del sistema
-            </Button>
+            {quickActions.map((action) => (
+              <Button
+                key={action.action}
+                variant="outline"
+                size="sm"
+                className="rounded-full text-xs border-muted-foreground/20 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                onClick={() => sendMessage(action.example_query)}
+              >
+                {action.description}
+              </Button>
+            ))}
           </div>
         </div>
       </div>

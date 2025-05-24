@@ -50,7 +50,7 @@ export const QuickActions = ({ actions, onAction, className = '' }: QuickActions
               onClick={() => onAction(action.example_query)}
             >
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <div className="w-6 h-6 rounded-lg  flex items-center justify-center  transition-colors">
                   <IconComponent className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors truncate">
