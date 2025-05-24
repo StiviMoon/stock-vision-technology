@@ -1,45 +1,16 @@
-# Ignorar archivos de entorno sensibles
-SVT-Backend/.env
-SVT-Backend/.env.*
+# Archivos comunes del sistema o del IDE
+.DS_Store
+Thumbs.db
+*.log
 
-# Ignorar entornos virtuales
-SVT-Backend/venv/
-SVT-Backend/env/
-SVT-Backend/.venv/
-SVT-Backend/ENV/
+# Entornos virtuales
+*.venv/
+venv/
+env/
 
-# Ignorar bytecode de Python y cachés
-SVT-Backend/__pycache__/
-SVT-Backend/*.py[cod]
-SVT-Backend/*$py.class
+# Node y Python comunes (por si se ejecutan comandos desde raíz)
+node_modules/
+__pycache__/
 
-# Ignorar archivos de distribución y empaquetado
-SVT-Backend/build/
-SVT-Backend/dist/
-SVT-Backend/*.egg-info/
-SVT-Backend/.eggs/
-
-# Ignorar logs y archivos temporales
-SVT-Backend/*.log
-
-# Ignorar configuración de VSCode
-SVT-Backend/.vscode/
-
-# Ignorar cachés de pruebas y herramientas
-SVT-Backend/.pytest_cache/
-SVT-Backend/.mypy_cache/
-
-# Ignorar reportes de cobertura
-SVT-Backend/htmlcov/
-SVT-Backend/.coverage
-SVT-Backend/.coverage.*
-
-# Ignorar checkpoints de Jupyter
-SVT-Backend/.ipynb_checkpoints/
-
-# Ignorar bases de datos SQLite
-SVT-Backend/*.sqlite3
-SVT-Backend/*.db
-
-# Ignorar archivos de sistema de Windows
-SVT-Backend/Thumbs.db
+# Configs globales de Visual Studio Code
+.vscode/

@@ -1,49 +1,10 @@
-# Python bytecode
+# Entorno virtual
+.venv/
+venv/
+
+# Archivos compilados
 __pycache__/
 *.py[cod]
-*$py.class
 
-# Virtual environment
-venv/
-env/
-ENV/
-.venv/
-.python-version
-
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# FastAPI auto-generated files (if any)
-*.log
-
-# VSCode settings
-.vscode/
-
-# Pytest cache
-.pytest_cache/
-
-# MyPy cache
-.mypy_cache/
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# dotenv environment variables
+# Configuración sensible
 .env
-.env*
-
-# SQLite database files
-*.sqlite3
-*.db
-
-
-# Windows
-Thumbs.db
