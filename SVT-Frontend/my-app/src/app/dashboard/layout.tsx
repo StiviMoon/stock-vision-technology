@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { ThemeProvider } from './Theme/ThemeContext';
 import ThemeToggle from './Theme/ThemeToggle';
+import ChatWidget from './Components/ChatWidget';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface User {
   email: string;
   rol?: string;
-  [key: string]: any; // For any additional properties
+  [key: string]: any;
 }
 
 interface DashboardLayoutProps {
@@ -21,6 +23,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
   const [showContent, setShowContent] = useState<boolean>(false);
+  const [chatEnabled, setChatEnabled] = useState<boolean>(true);
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -39,6 +42,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
+  // Manejar errores del chat
+  const handleChatError = (error: string) => {
+    console.error('Chat Error:', error);
+    
+    if (typeof toast !== 'undefined') {
+      toast.error(`Asistente IA: ${error}`);
+    } else {
+      console.warn('Chat Widget Error:', error);
+    }
+    
+    if (error.includes('Sesión expirada')) {
+      setChatEnabled(false);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     
@@ -47,20 +65,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       return;
     }
     
-    // Verificar autenticación y obtener datos del usuario
     const fetchUserData = async () => {
       try {
-        // Primera opción: Intentar con /users/me
         const response = await axios.get(`${API_URL}/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
         setUser(response.data);
+        setChatEnabled(true);
       } catch (error) {
         console.error('Error al obtener datos del usuario desde API:', error);
         
-        // Segunda opción: Decodificar el token JWT
         try {
           const decoded = decodeJWT(token);
           if (decoded && decoded.sub) {
@@ -68,8 +84,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               email: decoded.sub,
               rol: decoded.rol || 'Usuario'
             });
+            setChatEnabled(true);
             
-            // Intentar obtener más información en segundo plano
             try {
               const usersResponse = await axios.get<User[]>(`${API_URL}/users`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -86,18 +102,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             }
           } else {
             localStorage.removeItem('token');
+            setChatEnabled(false);
             router.push('/login');
           }
         } catch (decodeError) {
           console.error('Error al decodificar token:', decodeError);
           localStorage.removeItem('token');
+          setChatEnabled(false);
           router.push('/login');
         }
       } finally {
-        // Pequeño retraso para asegurar una transición suave
         setTimeout(() => {
           setLoading(false);
-          // Pequeño retraso adicional para la segunda animación
           setTimeout(() => setShowContent(true), 50);
         }, 500);
       }
@@ -106,10 +122,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     fetchUserData();
   }, [router, API_URL]);
 
-
   return (
     <ThemeProvider>
-      <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300 pt-14 xl:p-0">
+      <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300">
         {loading ? (
           <div 
             className="min-h-screen w-full flex flex-col items-center justify-center bg-background transition-opacity duration-300 ease-in-out opacity-100"
@@ -131,21 +146,33 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             
             {/* Contenido principal */}
             <div 
-              className={`flex-1 overflow-y-auto relative transition-all duration-500 ease-out transform ${showContent ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-3'}`}
+              className={`flex-1 overflow-y-auto relative transition-all duration-500 ease-out transform ${showContent ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-3'} pt-16 md:pt-0`}
             >
               {/* Contenedor para el contenido de las páginas */}
-              <div className="min-h-screen pb-16">
+              <div className="min-h-full">
                 {children}
               </div>
             </div>
           </div>
         )}
         
-        {/* Botón de tema con posicionamiento fijo a nivel de viewport */}
-        {!loading && (
-          <div className="fixed bottom-6 right-6 z-[9999]">
-            <ThemeToggle />
-          </div>
+        {/* Chat Widget - Solo se muestra cuando el usuario está autenticado y no está cargando */}
+        {!loading && chatEnabled && user && (
+          <div className="fixed bottom-6 right-6 flex flex-col gap-4 items-end z-[9999]">
+           
+          {/* Chat Widget - abajo */}
+          {chatEnabled && user && (
+            <div className="transition-all duration-500">
+              <ChatWidget
+                apiBaseUrl={API_URL}
+                title="Asistente IA SVT"
+                user={user}
+                position="static" // Cambiamos a static ya que el contenedor padre maneja la posición
+                onError={handleChatError}
+              />
+            </div>
+          )}
+        </div>
         )}
       </div>
     </ThemeProvider>

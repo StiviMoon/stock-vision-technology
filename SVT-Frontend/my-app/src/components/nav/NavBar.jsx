@@ -1,4 +1,6 @@
 'use client';
+import ThemeToggle from '../../app/dashboard/Theme/ThemeToggle';
+
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +16,10 @@ import {
   Store,
   Users,
   User,
+  Bot,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 
 const Nav = ({ user }) => {
@@ -95,7 +101,14 @@ const Nav = ({ user }) => {
       icon: <User size={20} />, 
       path: '/dashboard/usuarios',
       isActive: activePath.includes('/usuarios'),
-      onlyAdmin: true, // ← indicador personalizado para filtrado
+      onlyAdmin: true,
+    },
+    { 
+      id: 'chatIA', 
+      name: 'Asistente IA', 
+      icon: <Bot size={20} />, 
+      path: '/dashboard/chat',
+      isActive: activePath.includes('/chat'),
     },
     { 
       id: 'configuracion', 
@@ -106,14 +119,10 @@ const Nav = ({ user }) => {
     },
   ].filter(item => !item.onlyAdmin || user?.rol === 'ADMIN');
 
-    // En tu función de logout:
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('token_type');
-    
-    // Eliminar la cookie estableciendo una fecha de expiración en el pasado
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    
     router.push('/login');
   };
 
@@ -190,6 +199,17 @@ const Nav = ({ user }) => {
             </ul>
           </div>
 
+          {/* Theme Toggle en menú móvil */}
+          <div className="px-4 py-3 border-t border-sidebar-border">
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-sidebar-accent">
+              <div className="flex items-center">
+                <Sun size={20} className="mr-3" />
+                <span className="text-sm font-medium">Tema</span>
+              </div>
+              <ThemeToggle variant="navbar" size="sm" />
+            </div>
+          </div>
+
           <div className="mt-auto border-t border-sidebar-border p-4">
             <div className="flex items-center space-x-4 mb-5">
               <div className="relative">
@@ -235,15 +255,19 @@ const Nav = ({ user }) => {
   return (
     <div className="h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border overflow-hidden flex flex-col w-64">
       <div className="p-5 border-b border-sidebar-border">
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold">
-            SVT
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold">
+              SVT
+            </div>
+            <span className="ml-3 text-lg font-semibold">Dashboard</span>
           </div>
-          <span className="ml-3 text-lg font-semibold">Dashboard</span>
+          {/* Theme Toggle en el header */}
+          <ThemeToggle variant="navbar" size="sm" />
         </div>
       </div>
       
-      <div className="flex-grow py-6 px-4">
+      <div className="flex-grow py-6 px-4 overflow-y-auto">
         <ul className="space-y-2">
           {navItems.map((item) => (
             <li key={item.id}>
