@@ -146,4 +146,156 @@ export interface User {
     visible: boolean;
   }
   
-  // Añade otras interfaces según sea necesario para tu aplicación
+// ---- INTERFACES PARA INVENTARIO ----
+
+// Enums para tipos y motivos de movimiento
+export enum TipoMovimiento {
+  ENTRADA = "ENTRADA",
+  SALIDA = "SALIDA",
+  AJUSTE_POSITIVO = "AJUSTE_POSITIVO",
+  AJUSTE_NEGATIVO = "AJUSTE_NEGATIVO",
+  TRANSFERENCIA_ENTRADA = "TRANSFERENCIA_ENTRADA",
+  TRANSFERENCIA_SALIDA = "TRANSFERENCIA_SALIDA",
+  INVENTARIO_INICIAL = "INVENTARIO_INICIAL",
+  INVENTARIO_FISICO = "INVENTARIO_FISICO"
+}
+
+export enum MotivoMovimiento {
+  COMPRA = "COMPRA",
+  VENTA = "VENTA",
+  DEVOLUCION_CLIENTE = "DEVOLUCION_CLIENTE",
+  DEVOLUCION_PROVEEDOR = "DEVOLUCION_PROVEEDOR",
+  AJUSTE_STOCK = "AJUSTE_STOCK",
+  CONTEO_FISICO = "CONTEO_FISICO",
+  PRODUCTO_DANADO = "PRODUCTO_DANADO",
+  PRODUCTO_VENCIDO = "PRODUCTO_VENCIDO",
+  ERROR_SISTEMA = "ERROR_SISTEMA",
+  ROBO_PERDIDA = "ROBO_PERDIDA",
+  TRANSFERENCIA = "TRANSFERENCIA",
+  OTRO = "OTRO"
+}
+
+// Interfaces para Bodega
+export interface BodegaBase {
+  nombre: string;
+  codigo: string;
+  direccion?: string;
+  encargado?: string;
+  telefono?: string;
+  activa: boolean;
+}
+
+export interface BodegaCreate extends BodegaBase {}
+
+export interface BodegaUpdate {
+  nombre?: string;
+  direccion?: string;
+  encargado?: string;
+  telefono?: string;
+  activa?: boolean;
+}
+
+export interface Bodega extends BodegaBase {
+  id: number;
+  fecha_creacion: string;
+}
+
+// Interfaces para Stock por Bodega
+export interface StockBodegaBase {
+  producto_id: number;
+  bodega_id: number;
+  cantidad: number;
+  ubicacion?: string;
+}
+
+export interface StockBodega extends StockBodegaBase {
+  id: number;
+  producto: Producto;
+  bodega: Bodega;
+}
+
+// Interfaces para Movimientos de Inventario
+export interface MovimientoInventarioBase {
+  producto_id: number;
+  tipo_movimiento: TipoMovimiento;
+  cantidad: number;
+  motivo: MotivoMovimiento;
+  observaciones?: string;
+  documento_referencia?: string;
+}
+
+export interface MovimientoInventarioCreate extends MovimientoInventarioBase {
+  bodega_origen_id?: number;
+  bodega_destino_id?: number;
+}
+
+export interface AjusteInventarioCreate {
+  producto_id: number;
+  bodega_id: number;
+  cantidad: number; // Puede ser positivo o negativo
+  motivo: MotivoMovimiento;
+  observaciones?: string;
+}
+
+export interface TransferenciaInventarioCreate {
+  producto_id: number;
+  bodega_origen_id: number;
+  bodega_destino_id: number;
+  cantidad: number;
+  observaciones?: string;
+}
+
+export interface InventarioFisicoItem {
+  producto_id: number;
+  bodega_id: number;
+  cantidad_contada: number;
+}
+
+export interface InventarioFisicoCreate {
+  items: InventarioFisicoItem[];
+  observaciones?: string;
+}
+
+export interface MovimientoInventario extends MovimientoInventarioBase {
+  id: number;
+  usuario_id: number;
+  fecha_movimiento: string;
+  stock_anterior: number;
+  stock_posterior: number;
+  bodega_origen_id?: number;
+  bodega_destino_id?: number;
+  producto: Producto;
+  usuario: User;
+  bodega_origen?: Bodega;
+  bodega_destino?: Bodega;
+}
+
+// Interfaces para reportes y consultas
+export interface StockConsolidado {
+  producto: Producto;
+  stock_total: number;
+  stock_por_bodega: StockBodega[];
+  estado: "NORMAL" | "STOCK_BAJO" | "SIN_STOCK";
+}
+
+export interface KardexResponse {
+  producto: Producto;
+  movimientos: MovimientoInventario[];
+  stock_actual: number;
+}
+
+export interface AlertaStock {
+  producto: Producto;
+  stock_actual: number;
+  stock_minimo: number;
+  porcentaje_alerta: number;
+  bodega?: Bodega;
+}
+
+// Filtros para inventario
+export interface InventarioFilterOptions {
+  bodega_id?: number;
+  categoria?: string;
+  estado?: "NORMAL" | "STOCK_BAJO" | "SIN_STOCK";
+  producto_id?: number;
+}

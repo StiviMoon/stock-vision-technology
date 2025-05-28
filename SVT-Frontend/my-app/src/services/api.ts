@@ -19,7 +19,21 @@ import {
   LoginCredentials,
   ValidationError,
   ProductoFilterOptions,
-  NotificationState
+  NotificationState,
+  Bodega,
+  BodegaCreate,
+  BodegaUpdate,
+  StockBodega,
+  StockConsolidado,
+  AlertaStock,
+  MovimientoInventario,
+  MovimientoInventarioCreate,
+  AjusteInventarioCreate,
+  TransferenciaInventarioCreate,
+  InventarioFisicoCreate,
+  InventarioFisicoItem,
+  KardexResponse,
+  InventarioFilterOptions
 } from './interfaces'; // Asegúrate de que la ruta sea correcta
 
 // ---- CONFIGURACIÓN DE LA API ----
@@ -300,6 +314,177 @@ export const proveedorService = {
   }
 };
 
+// Servicio de inventario
+export const inventarioService = {
+  // ---- BODEGAS ----
+  
+  // Obtener todas las bodegas
+  getBodegas: async (soloActivas: boolean = true): Promise<Bodega[]> => {
+    try {
+      const response = await api.get<Bodega[]>('/inventario/bodegas', {
+        params: { 
+          skip: 0,  // CAMBIAR de skip: 1 a skip: 0 para no saltar registros
+          limit: 100,
+          solo_activas: soloActivas 
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener bodegas:', error);
+      throw error;
+    }
+  },
+  
+  // Obtener una bodega por ID
+  getBodega: async (bodegaId: number): Promise<Bodega> => {
+    try {
+      const response = await api.get<Bodega>(`/inventario/bodegas/${bodegaId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Crear una nueva bodega
+  createBodega: async (bodegaData: BodegaCreate): Promise<Bodega> => {
+    try {
+      const response = await api.post<Bodega>('/inventario/bodegas', bodegaData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Actualizar una bodega
+  updateBodega: async (bodegaId: number, bodegaData: BodegaUpdate): Promise<Bodega> => {
+    try {
+      const response = await api.put<Bodega>(`/inventario/bodegas/${bodegaId}`, bodegaData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // ---- STOCK ----
+  
+  // Obtener stock consolidado de un producto
+  getStockProducto: async (productoId: number): Promise<StockConsolidado> => {
+    try {
+      const response = await api.get<StockConsolidado>(`/inventario/stock/producto/${productoId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener stock de una bodega
+  getStockBodega: async (bodegaId: number): Promise<StockBodega[]> => {
+    try {
+      const response = await api.get<StockBodega[]>(`/inventario/stock/bodega/${bodegaId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener alertas de stock bajo
+  getAlertasStock: async (): Promise<AlertaStock[]> => {
+    try {
+      const response = await api.get<AlertaStock[]>('/inventario/stock/alertas');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // ---- MOVIMIENTOS ----
+  
+  // Crear movimiento genérico
+  createMovimiento: async (movimientoData: MovimientoInventarioCreate): Promise<MovimientoInventario> => {
+    try {
+      const response = await api.post<MovimientoInventario>('/inventario/movimientos', movimientoData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Ajustar inventario
+  ajustarInventario: async (ajusteData: AjusteInventarioCreate): Promise<MovimientoInventario> => {
+    try {
+      const response = await api.post<MovimientoInventario>('/inventario/ajuste', ajusteData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Transferir entre bodegas
+  transferirEntreBodegas: async (transferenciaData: TransferenciaInventarioCreate): Promise<any> => {
+    try {
+      const response = await api.post('/inventario/transferencia', transferenciaData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Realizar inventario físico
+  realizarInventarioFisico: async (inventarioData: InventarioFisicoCreate): Promise<MovimientoInventario[]> => {
+    try {
+      const response = await api.post<MovimientoInventario[]>('/inventario/inventario-fisico', inventarioData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // ---- REPORTES ----
+  
+  // Obtener kardex de un producto
+  getKardex: async (
+    productoId: number, 
+    fechaInicio?: string, 
+    fechaFin?: string, 
+    bodegaId?: number
+  ): Promise<KardexResponse> => {
+    try {
+      const params: any = {};
+      if (fechaInicio) params.fecha_inicio = fechaInicio;
+      if (fechaFin) params.fecha_fin = fechaFin;
+      if (bodegaId) params.bodega_id = bodegaId;
+      
+      const response = await api.get<KardexResponse>(`/inventario/kardex/${productoId}`, { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener movimientos con filtros
+  getMovimientos: async (
+    filtros: {
+      skip?: number;
+      limit?: number;
+      producto_id?: number;
+      bodega_id?: number;
+      tipo_movimiento?: string;
+      fecha_inicio?: string;
+      fecha_fin?: string;
+    } = {}
+  ): Promise<MovimientoInventario[]> => {
+    try {
+      const response = await api.get<MovimientoInventario[]>('/inventario/movimientos', { 
+        params: filtros 
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+
 // Exportar la instancia de API y los tipos para uso en la aplicación
 export type { 
   User, 
@@ -319,7 +504,21 @@ export type {
   LoginCredentials,
   ValidationError,
   ProductoFilterOptions,
-  NotificationState
+  NotificationState,
+  Bodega,
+  BodegaCreate,
+  BodegaUpdate,
+  StockBodega,
+  StockConsolidado,
+  AlertaStock,
+  MovimientoInventario,
+  MovimientoInventarioCreate,
+  AjusteInventarioCreate,
+  TransferenciaInventarioCreate,
+  InventarioFisicoCreate,
+  InventarioFisicoItem,
+  KardexResponse,
+  InventarioFilterOptions
 };
 
 export default api;

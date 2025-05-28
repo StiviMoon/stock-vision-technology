@@ -16,8 +16,9 @@ import {
   } from "@/components/ui/dropdown-menu";
   import { Badge } from "@/components/ui/badge";
   import { Button } from "@/components/ui/button";
-  import { Edit, MoreHorizontal, Trash2, Mail, Phone } from "lucide-react";
+  import { Edit, MoreHorizontal, Trash2, Mail, Phone, ChevronLeft, ChevronRight } from "lucide-react";
   import { Proveedor } from "./ProveedorDashBoard";
+  import { useState } from "react";
   
   interface ProveedorTableProps {
     proveedores: Proveedor[];
@@ -26,6 +27,16 @@ import {
   }
   
   export default function ProveedorTable({ proveedores, onEdit, onDelete }: ProveedorTableProps) {
+    const [pagina, setPagina] = useState(1);
+    const proveedoresPorPagina = 10;
+  
+    // Calcular proveedores a mostrar en la página actual
+    const totalPaginas = Math.ceil(proveedores.length / proveedoresPorPagina);
+    const proveedoresPagina = proveedores.slice(
+      (pagina - 1) * proveedoresPorPagina,
+      pagina * proveedoresPorPagina
+    );
+  
     if (proveedores.length === 0) {
       return (
         <div className="border rounded-lg p-8 flex flex-col items-center justify-center bg-background shadow">
@@ -53,7 +64,7 @@ import {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {proveedores.map((proveedor) => (
+            {proveedoresPagina.map((proveedor) => (
               <TableRow key={proveedor.id} className="hover:bg-muted/40 transition">
                 <TableCell className="font-medium">{proveedor.id}</TableCell>
                 <TableCell>{proveedor.nombre}</TableCell>
@@ -107,6 +118,30 @@ import {
             ))}
           </TableBody>
         </Table>
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex justify-end items-center gap-2 p-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pagina === 1}
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Página {pagina} de {totalPaginas}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pagina === totalPaginas}
+              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     );
   }

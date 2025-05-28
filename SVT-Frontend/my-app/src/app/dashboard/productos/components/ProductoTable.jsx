@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 import ProductoRow from './ProductoRow';
 
@@ -36,6 +36,8 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
   const [categoryFilter, setCategoryFilter] = useState('all'); // Cambiado de '' a 'all'
   const [stockFilter, setStockFilter] = useState('all'); // Cambiado de '' a 'all'
   const [activeFilters, setActiveFilters] = useState([]);
+  const [pagina, setPagina] = useState(1);
+  const productosPorPagina = 10;
   
   // Opciones de categorías disponibles (generadas dinámicamente)
   const availableCategories = [...new Set(productos.map(p => p.categoria))].filter(Boolean);
@@ -100,6 +102,18 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
     }
     setActiveFilters(newActiveFilters);
   }, [productos, searchTerm, categoryFilter, stockFilter]);
+  
+  // Reiniciar página cuando cambian los filtros o productos
+  useEffect(() => {
+    setPagina(1);
+  }, [searchTerm, categoryFilter, stockFilter, productos]);
+  
+  // Calcular productos a mostrar en la página actual
+  const totalPaginas = Math.ceil(filteredProductos.length / productosPorPagina);
+  const productosPagina = filteredProductos.slice(
+    (pagina - 1) * productosPorPagina,
+    pagina * productosPorPagina
+  );
   
   // Limpiar todos los filtros
   const clearAllFilters = () => {
@@ -231,7 +245,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProductos.length === 0 ? (
+              {productosPagina.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                     {productos.length === 0 
@@ -240,7 +254,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredProductos.map((producto) => (
+                productosPagina.map((producto) => (
                   <ProductoRow 
                     key={producto.id} 
                     producto={producto} 
@@ -252,6 +266,30 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
             </TableBody>
           </Table>
         </div>
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex justify-end items-center gap-2 mt-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pagina === 1}
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Página {pagina} de {totalPaginas}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pagina === totalPaginas}
+              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

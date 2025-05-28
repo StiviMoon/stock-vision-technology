@@ -1,7 +1,14 @@
 # main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, users, productos, proveedores, chatbot  # Agregar chatbot
+from routers import (
+    auth,
+    users,
+    productos,
+    proveedores,
+    chatbot,
+    inventario,
+)  # Agregar chatbot e inventario
 from database import engine
 import models
 
@@ -32,6 +39,7 @@ app.include_router(proveedores.router, prefix="/proveedores", tags=["Proveedores
 
 # Incluir el nuevo router del chatbot IA
 app.include_router(chatbot.router, prefix="/chatbot", tags=["Chatbot IA"])
+app.include_router(inventario.router)
 
 
 # Ruta de prueba actualizada
