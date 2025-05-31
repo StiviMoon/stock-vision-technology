@@ -33,10 +33,10 @@ def crear_producto(
     return producto_service.create_producto(db=db, producto=producto)
 
 
-@router.get("/", response_model=List[schemas.ProductoResponse])
+@router.get("/", response_model=List[schemas.ProductoListResponse])
 def listar_productos(
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(get_current_user),  # Cambiado aquí
+    current_user: models.User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
     sku: Optional[str] = None,

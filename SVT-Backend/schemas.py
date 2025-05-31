@@ -1,11 +1,10 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
-from typing import List, Optional
 from enum import Enum
 
 
-# Esquemas de Usuario
+# ====================== ESQUEMAS DE USUARIO ======================
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -24,7 +23,7 @@ class RoleUpdateRequest(BaseModel):
     new_role: str
 
 
-# Esquemas de Proveedor
+# ====================== ESQUEMAS DE PROVEEDOR ======================
 class ProveedorBase(BaseModel):
     nombre: str
     codigo: str
@@ -45,7 +44,64 @@ class ProveedorResponse(ProveedorBase):
         from_attributes = True
 
 
-# Esquemas de Producto
+# ====================== ESQUEMAS DE BODEGA ======================
+class BodegaBase(BaseModel):
+    nombre: str
+    codigo: str
+    direccion: Optional[str] = None
+    encargado: Optional[str] = None
+    telefono: Optional[str] = None
+    activa: bool = True
+
+
+class BodegaCreate(BodegaBase):
+    pass
+
+
+class BodegaUpdate(BaseModel):
+    nombre: Optional[str] = None
+    direccion: Optional[str] = None
+    encargado: Optional[str] = None
+    telefono: Optional[str] = None
+    activa: Optional[bool] = None
+
+
+class BodegaResponse(BodegaBase):
+    id: int
+    fecha_creacion: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ====================== ENUMS ======================
+class TipoMovimientoEnum(str, Enum):
+    ENTRADA = "ENTRADA"
+    SALIDA = "SALIDA"
+    AJUSTE_POSITIVO = "AJUSTE_POSITIVO"
+    AJUSTE_NEGATIVO = "AJUSTE_NEGATIVO"
+    TRANSFERENCIA_ENTRADA = "TRANSFERENCIA_ENTRADA"
+    TRANSFERENCIA_SALIDA = "TRANSFERENCIA_SALIDA"
+    INVENTARIO_INICIAL = "INVENTARIO_INICIAL"
+    INVENTARIO_FISICO = "INVENTARIO_FISICO"
+
+
+class MotivoMovimientoEnum(str, Enum):
+    COMPRA = "COMPRA"
+    VENTA = "VENTA"
+    DEVOLUCION_CLIENTE = "DEVOLUCION_CLIENTE"
+    DEVOLUCION_PROVEEDOR = "DEVOLUCION_PROVEEDOR"
+    AJUSTE_STOCK = "AJUSTE_STOCK"
+    CONTEO_FISICO = "CONTEO_FISICO"
+    PRODUCTO_DANADO = "PRODUCTO_DANADO"
+    PRODUCTO_VENCIDO = "PRODUCTO_VENCIDO"
+    ERROR_SISTEMA = "ERROR_SISTEMA"
+    ROBO_PERDIDA = "ROBO_PERDIDA"
+    TRANSFERENCIA = "TRANSFERENCIA"
+    OTRO = "OTRO"
+
+
+# ====================== ESQUEMAS DE PRODUCTO ======================
 class ProductoBase(BaseModel):
     sku: str
     nombre: str
@@ -81,71 +137,7 @@ class ProductoResponse(ProductoBase):
         from_attributes = True
 
 
-class ProductoDetailResponse(ProductoResponse):
-    proveedor: Optional[ProveedorResponse] = None
-
-    class Config:
-        from_attributes = True
-
-
-# Enums para los esquemas
-class TipoMovimientoEnum(str, Enum):
-    ENTRADA = "ENTRADA"
-    SALIDA = "SALIDA"
-    AJUSTE_POSITIVO = "AJUSTE_POSITIVO"
-    AJUSTE_NEGATIVO = "AJUSTE_NEGATIVO"
-    TRANSFERENCIA_ENTRADA = "TRANSFERENCIA_ENTRADA"
-    TRANSFERENCIA_SALIDA = "TRANSFERENCIA_SALIDA"
-    INVENTARIO_INICIAL = "INVENTARIO_INICIAL"
-    INVENTARIO_FISICO = "INVENTARIO_FISICO"
-
-
-class MotivoMovimientoEnum(str, Enum):
-    COMPRA = "COMPRA"
-    VENTA = "VENTA"
-    DEVOLUCION_CLIENTE = "DEVOLUCION_CLIENTE"
-    DEVOLUCION_PROVEEDOR = "DEVOLUCION_PROVEEDOR"
-    AJUSTE_STOCK = "AJUSTE_STOCK"
-    CONTEO_FISICO = "CONTEO_FISICO"
-    PRODUCTO_DANADO = "PRODUCTO_DANADO"
-    PRODUCTO_VENCIDO = "PRODUCTO_VENCIDO"
-    ERROR_SISTEMA = "ERROR_SISTEMA"
-    ROBO_PERDIDA = "ROBO_PERDIDA"
-    TRANSFERENCIA = "TRANSFERENCIA"
-    OTRO = "OTRO"
-
-
-# Esquemas de Bodega
-class BodegaBase(BaseModel):
-    nombre: str
-    codigo: str
-    direccion: Optional[str] = None
-    encargado: Optional[str] = None
-    telefono: Optional[str] = None
-    activa: bool = True
-
-
-class BodegaCreate(BodegaBase):
-    pass
-
-
-class BodegaUpdate(BaseModel):
-    nombre: Optional[str] = None
-    direccion: Optional[str] = None
-    encargado: Optional[str] = None
-    telefono: Optional[str] = None
-    activa: Optional[bool] = None
-
-
-class BodegaResponse(BodegaBase):
-    id: int
-    fecha_creacion: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# Esquemas de Stock por Bodega
+# ====================== ESQUEMAS DE STOCK ======================
 class StockBodegaBase(BaseModel):
     producto_id: int
     bodega_id: int
@@ -162,6 +154,19 @@ class StockBodegaUpdate(BaseModel):
     ubicacion: Optional[str] = None
 
 
+# Esquema simplificado para listados (sin duplicar producto)
+class StockBodegaSimple(BaseModel):
+    id: int
+    bodega_id: int
+    cantidad: int
+    ubicacion: Optional[str] = None
+    bodega: BodegaResponse
+
+    class Config:
+        from_attributes = True
+
+
+# Esquema completo para detalles
 class StockBodegaResponse(StockBodegaBase):
     id: int
     producto: ProductoResponse
@@ -171,7 +176,30 @@ class StockBodegaResponse(StockBodegaBase):
         from_attributes = True
 
 
-# Esquemas de Movimiento de Inventario
+# ====================== ESQUEMAS DE PRODUCTO CON RELACIONES ======================
+# Para listados optimizados (sin redundancia)
+class ProductoListResponse(ProductoBase):
+    id: int
+    stock_actual: int
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
+    proveedor: Optional[ProveedorResponse] = None
+    stocks_bodega: List[StockBodegaSimple] = []
+
+    class Config:
+        from_attributes = True
+
+
+# Para detalles completos
+class ProductoDetailResponse(ProductoResponse):
+    proveedor: Optional[ProveedorResponse] = None
+    stocks_bodega: List[StockBodegaResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+# ====================== ESQUEMAS DE MOVIMIENTOS ======================
 class MovimientoInventarioBase(BaseModel):
     producto_id: int
     tipo_movimiento: TipoMovimientoEnum
@@ -202,17 +230,6 @@ class TransferenciaInventarioCreate(BaseModel):
     observaciones: Optional[str] = None
 
 
-class InventarioFisicoItem(BaseModel):
-    producto_id: int
-    bodega_id: int
-    cantidad_contada: int
-
-
-class InventarioFisicoCreate(BaseModel):
-    items: List[InventarioFisicoItem]
-    observaciones: Optional[str] = None
-
-
 class MovimientoInventarioResponse(MovimientoInventarioBase):
     id: int
     usuario_id: int
@@ -230,7 +247,19 @@ class MovimientoInventarioResponse(MovimientoInventarioBase):
         from_attributes = True
 
 
-# Esquemas para reportes y consultas
+# ====================== ESQUEMAS PARA INVENTARIO FÍSICO ======================
+class InventarioFisicoItem(BaseModel):
+    producto_id: int
+    bodega_id: int
+    cantidad_contada: int
+
+
+class InventarioFisicoCreate(BaseModel):
+    items: List[InventarioFisicoItem]
+    observaciones: Optional[str] = None
+
+
+# ====================== ESQUEMAS PARA REPORTES ======================
 class StockConsolidado(BaseModel):
     producto: ProductoResponse
     stock_total: int
@@ -250,28 +279,3 @@ class AlertaStock(BaseModel):
     stock_minimo: int
     porcentaje_alerta: float
     bodega: Optional[BodegaResponse] = None
-
-
-class StockBodegaResponse(StockBodegaBase):
-    id: int
-    producto: ProductoResponse
-    bodega: BodegaResponse
-
-    class Config:
-        from_attributes = True
-
-
-class ProductoConStocksResponse(ProductoResponse):
-    proveedor: Optional[ProveedorResponse] = None
-    stocks_bodega: List[StockBodegaResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-class ProductoConStocksResponse(ProductoResponse):
-    proveedor: Optional[ProveedorResponse] = None
-    stocks_bodega: List[StockBodegaResponse] = []
-
-    class Config:
-        from_attributes = True

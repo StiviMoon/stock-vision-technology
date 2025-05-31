@@ -30,7 +30,10 @@ def get_productos(
     proveedor_id: int = None,
 ):
     """Obtener productos con filtros opcionales"""
-    query = db.query(models.Producto).options(joinedload(models.Producto.proveedor))
+    query = db.query(models.Producto).options(
+        joinedload(models.Producto.proveedor),
+        joinedload(models.Producto.stocks_bodega).joinedload(models.StockBodega.bodega),
+    )
 
     # Aplicar filtros si se proporcionan
     if sku:
