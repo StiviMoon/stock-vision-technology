@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 import models
-from schemas import ProveedorCreate, ProveedorResponse
+from schemas import ProveedorCreate
 
 
 def get_proveedor(db: Session, proveedor_id: int):

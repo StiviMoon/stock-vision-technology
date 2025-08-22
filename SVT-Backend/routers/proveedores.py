@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-import models, schemas, database
+import models
+import schemas
+import database
 from services import proveedor_service
 from utils.security import get_current_user
 from utils.role_verification import verify_jefe_bodega_or_admin

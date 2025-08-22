@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: svt-postgres
+    environment:
+      POSTGRES_DB: svt_database
+      POSTGRES_USER: svt_user
+      POSTGRES_PASSWORD: svt_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - svt-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: svt-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@svt.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - svt-network
+
+volumes:
+  postgres_data:
+
+networks:
+  svt-network:
+    driver: bridge

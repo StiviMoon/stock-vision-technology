@@ -1,10 +1,10 @@
 # routers/chatbot.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, List
-from database import get_db  # Usar tu función get_db existente
+from typing import Optional
+from database import get_db
 from services.chatbot_service import get_ai_assistant, InventoryAIAssistant
 import uuid
 from datetime import datetime
@@ -208,8 +208,6 @@ async def chatbot_health_check():
     ❤️ Verificar estado del servicio de chatbot
     """
     try:
-        # Verificar conexión con Gemini
-        assistant = await get_ai_assistant()
         gemini_status = os.getenv("GEMINI_API_KEY") is not None
 
         return {

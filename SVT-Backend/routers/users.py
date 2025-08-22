@@ -3,8 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-import models, schemas, database
+import models
+import schemas
+import database
 from utils.security import get_current_user
+from schemas import RoleUpdateRequest
 
 router = APIRouter()
 
@@ -49,9 +52,6 @@ def get_user(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return user
-
-
-from schemas import RoleUpdateRequest  # Asegúrate de importar esto
 
 
 @router.put("/{user_id}/role")

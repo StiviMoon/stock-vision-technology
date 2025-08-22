@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
 from fastapi import HTTPException, status
 import models
 from schemas import ProductoCreate, ProductoUpdate

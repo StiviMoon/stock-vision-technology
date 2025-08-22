@@ -1,2 +1,2 @@
-def format_currency(value):
-    return "${:,.2f}".format(value)
+def format_currency(value: float) -> str:
+    return f"${value:,.2f}"

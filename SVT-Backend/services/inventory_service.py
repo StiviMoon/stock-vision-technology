@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, func
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Optional
 import models
 from schemas import (
     BodegaCreate,
@@ -24,7 +24,7 @@ def get_bodegas(
     """Obtener todas las bodegas"""
     query = db.query(models.Bodega)
     if solo_activas:
-        query = query.filter(models.Bodega.activa == True)
+        query = query.filter(models.Bodega.activa)
     return query.offset(skip).limit(limit).all()
 
 
@@ -330,7 +330,7 @@ def ajustar_inventario(db: Session, ajuste: AjusteInventarioCreate, usuario_id: 
     db.refresh(db_movimiento)
 
     # Log para debugging
-    print(f"Ajuste completado:")
+    print("Ajuste completado:")
     print(f"  - Producto: {producto.nombre} (ID: {ajuste.producto_id})")
     print(f"  - Bodega: {bodega.nombre} (ID: {ajuste.bodega_id})")
     print(f"  - Tipo: {tipo_movimiento}")

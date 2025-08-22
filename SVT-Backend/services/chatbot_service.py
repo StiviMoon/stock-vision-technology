@@ -1,8 +1,6 @@
 import google.generativeai as genai
 import os
 from sqlalchemy.orm import Session
-from typing import Any
-from datetime import datetime
 
 from services.product_queries import (
     get_products_query,
