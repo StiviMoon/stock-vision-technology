@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,30 +6,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
-import ErrorAlert from "./ErrorAlert";
-import { SKUGenerator } from "./SKUGenerator";
-import { proveedorService, inventarioService } from "@/src/services/api";
-import { useRouter } from "next/navigation";
+} from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import ErrorAlert from './ErrorAlert';
+import { SKUGenerator } from './SKUGenerator';
+import { proveedorService, inventarioService } from '@/src/services/api';
+import { useRouter } from 'next/navigation';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
+import { useProductoToasts } from '@/src/hooks/useProductoToasts';
 
 export default function ProductoForm({
   isOpen,
@@ -40,20 +41,23 @@ export default function ProductoForm({
 }) {
   const router = useRouter();
 
+  // Hook para toasts de productos
+  const toasts = useProductoToasts();
+
   // Estado para el formulario
   const [formData, setFormData] = useState({
-    sku: "",
-    nombre: "",
-    descripcion: "",
-    categoria: "",
-    subcategoria: "",
-    color: "",
-    tamaño: "",
+    sku: '',
+    nombre: '',
+    descripcion: '',
+    categoria: '',
+    subcategoria: '',
+    color: '',
+    tamaño: '',
     precio_unitario: 0,
-    proveedor_id: "",
+    proveedor_id: '',
     stock_minimo: 0,
     stock_inicial: 0,
-    bodega_id: "",
+    bodega_id: '',
   });
 
   // Estado para proveedores
@@ -73,15 +77,15 @@ export default function ProductoForm({
   const [skuManual, setSkuManual] = useState(false);
 
   // Categorías disponibles
-  const categorias = Object.keys(SKUGenerator.CATEGORY_PREFIXES).map((cat) => ({
+  const categorias = Object.keys(SKUGenerator.CATEGORY_PREFIXES).map(cat => ({
     value: cat,
     label: cat.charAt(0) + cat.slice(1).toLowerCase(),
   }));
 
   // Función helper para manejar valores de Select
-  const getSelectValue = (value) => {
-    if (value === null || value === undefined) return "";
-    return typeof value === "string" ? value : value.toString();
+  const getSelectValue = value => {
+    if (value === null || value === undefined) return '';
+    return typeof value === 'string' ? value : value.toString();
   };
 
   // Cargar proveedores y bodegas al montar el componente
@@ -100,8 +104,8 @@ export default function ProductoForm({
           setNoProveedoresDisponibles(false);
         }
       } catch (error) {
-        console.error("Error al cargar proveedores:", error);
-        setProveedorError("No se pudieron cargar los proveedores");
+        console.error('Error al cargar proveedores:', error);
+        setProveedorError('No se pudieron cargar los proveedores');
       } finally {
         setLoadingProveedores(false);
       }
@@ -110,10 +114,10 @@ export default function ProductoForm({
       setLoadingBodegas(true);
       try {
         const bodegasData = await inventarioService.getBodegas();
-        console.log("Bodegas cargadas:", bodegasData); // DEBUG
+        console.log('Bodegas cargadas:', bodegasData); // DEBUG
         setBodegas(bodegasData);
       } catch (error) {
-        console.error("Error al cargar bodegas:", error);
+        console.error('Error al cargar bodegas:', error);
       } finally {
         setLoadingBodegas(false);
       }
@@ -126,65 +130,65 @@ export default function ProductoForm({
 
   // Actualizar el formulario cuando cambia el modo, los datos iniciales o se cargan proveedores/bodegas
   useEffect(() => {
-    console.log("useEffect - bodegas disponibles:", bodegas); // DEBUG
+    console.log('useEffect - bodegas disponibles:', bodegas); // DEBUG
 
-    if (formMode === "create" && bodegas.length > 0 && !formData.bodega_id) {
+    if (formMode === 'create' && bodegas.length > 0 && !formData.bodega_id) {
       // Si estamos en modo crear y hay bodegas pero no hay bodega seleccionada
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         bodega_id: bodegas[0].id.toString(),
       }));
     }
 
-    if (formMode === "create") {
-      setFormData((prev) => ({
+    if (formMode === 'create') {
+      setFormData(prev => ({
         ...prev,
-        sku: "",
-        nombre: "",
-        descripcion: "",
-        categoria: "",
-        subcategoria: "",
-        color: "",
-        tamaño: "",
+        sku: '',
+        nombre: '',
+        descripcion: '',
+        categoria: '',
+        subcategoria: '',
+        color: '',
+        tamaño: '',
         precio_unitario: 0,
         proveedor_id:
-          proveedores.length > 0 ? proveedores[0].id.toString() : "",
+          proveedores.length > 0 ? proveedores[0].id.toString() : '',
         stock_minimo: 0,
         stock_inicial: 0,
         bodega_id:
           prev.bodega_id ||
-          (bodegas.length > 0 ? bodegas[0].id.toString() : ""),
+          (bodegas.length > 0 ? bodegas[0].id.toString() : ''),
       }));
       setSkuManual(false);
     } else if (initialData) {
       setFormData({
-        sku: initialData.sku || "",
-        nombre: initialData.nombre || "",
-        descripcion: initialData.descripcion || "",
-        categoria: initialData.categoria || "",
-        subcategoria: initialData.subcategoria || "",
-        color: initialData.color || "",
-        tamaño: initialData.tamaño || "",
+        sku: initialData.sku || '',
+        nombre: initialData.nombre || '',
+        descripcion: initialData.descripcion || '',
+        categoria: initialData.categoria || '',
+        subcategoria: initialData.subcategoria || '',
+        color: initialData.color || '',
+        tamaño: initialData.tamaño || '',
         precio_unitario:
-          typeof initialData.precio_unitario === "number"
+          typeof initialData.precio_unitario === 'number'
             ? initialData.precio_unitario
             : 0,
         proveedor_id: initialData.proveedor_id
           ? initialData.proveedor_id.toString()
-          : "",
+          : '',
         stock_minimo:
-          typeof initialData.stock_minimo === "number"
+          typeof initialData.stock_minimo === 'number'
             ? initialData.stock_minimo
             : 0,
         stock_actual:
-          typeof initialData.stock_actual === "number"
+          typeof initialData.stock_actual === 'number'
             ? initialData.stock_actual
             : 0,
         bodega_id: initialData.bodega_id
           ? initialData.bodega_id.toString()
           : bodegas.length > 0
           ? bodegas[0].id.toString()
-          : "",
+          : '',
       });
       setSkuManual(true);
     }
@@ -196,7 +200,7 @@ export default function ProductoForm({
   useEffect(() => {
     if (
       !skuManual &&
-      formMode === "create" &&
+      formMode === 'create' &&
       formData.nombre &&
       formData.categoria
     ) {
@@ -206,7 +210,7 @@ export default function ProductoForm({
       };
 
       const generatedSKU = SKUGenerator.generateSKU(tempProduct);
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         sku: generatedSKU,
       }));
@@ -221,19 +225,19 @@ export default function ProductoForm({
     formMode,
   ]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
 
     let processedValue;
     if (
       [
-        "precio_unitario",
-        "stock_minimo",
-        "stock_inicial",
-        "stock_actual",
+        'precio_unitario',
+        'stock_minimo',
+        'stock_inicial',
+        'stock_actual',
       ].includes(name)
     ) {
-      processedValue = value === "" ? 0 : parseFloat(value) || 0;
+      processedValue = value === '' ? 0 : parseFloat(value) || 0;
     } else {
       processedValue = value;
     }
@@ -243,7 +247,7 @@ export default function ProductoForm({
       [name]: processedValue,
     });
 
-    if (name === "sku") {
+    if (name === 'sku') {
       setSkuManual(true);
     }
 
@@ -279,30 +283,34 @@ export default function ProductoForm({
       };
 
       const generatedSKU = SKUGenerator.generateSKU(tempProduct);
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         sku: generatedSKU,
       }));
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     // Validaciones
     if (!formData.proveedor_id) {
+      const errorMessage = 'Debes seleccionar un proveedor';
       setFormErrors({
         ...formErrors,
-        proveedor_id: "Debes seleccionar un proveedor",
+        proveedor_id: errorMessage,
       });
+      toasts.showValidationError('Proveedor', errorMessage);
       return;
     }
 
     if (!formData.bodega_id) {
+      const errorMessage = 'Debes seleccionar una bodega';
       setFormErrors({
         ...formErrors,
-        bodega_id: "Debes seleccionar una bodega",
+        bodega_id: errorMessage,
       });
+      toasts.showValidationError('Bodega', errorMessage);
       return;
     }
 
@@ -331,37 +339,37 @@ export default function ProductoForm({
     if (!formData.categoria) return [];
 
     const subCategories = {};
-    Object.keys(SKUGenerator.SUBCATEGORY_CODES).forEach((subcat) => {
+    Object.keys(SKUGenerator.SUBCATEGORY_CODES).forEach(subcat => {
       if (
-        formData.categoria === "ELECTRONICA" &&
+        formData.categoria === 'ELECTRONICA' &&
         [
-          "CELULARES",
-          "COMPUTADORAS",
-          "TABLETS",
-          "AUDIO",
-          "TELEVISORES",
+          'CELULARES',
+          'COMPUTADORAS',
+          'TABLETS',
+          'AUDIO',
+          'TELEVISORES',
         ].includes(subcat)
       ) {
         subCategories[subcat] =
-          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace("_", " ");
+          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
       } else if (
-        formData.categoria === "ROPA" &&
+        formData.categoria === 'ROPA' &&
         [
-          "CAMISETAS",
-          "PANTALONES",
-          "VESTIDOS",
-          "ABRIGOS",
-          "ROPA_INTERIOR",
+          'CAMISETAS',
+          'PANTALONES',
+          'VESTIDOS',
+          'ABRIGOS',
+          'ROPA_INTERIOR',
         ].includes(subcat)
       ) {
         subCategories[subcat] =
-          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace("_", " ");
+          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
       } else if (
-        formData.categoria === "CALZADO" &&
-        ["ZAPATOS", "DEPORTIVOS", "BOTAS", "SANDALIAS"].includes(subcat)
+        formData.categoria === 'CALZADO' &&
+        ['ZAPATOS', 'DEPORTIVOS', 'BOTAS', 'SANDALIAS'].includes(subcat)
       ) {
         subCategories[subcat] =
-          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace("_", " ");
+          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
       }
     });
 
@@ -372,29 +380,29 @@ export default function ProductoForm({
   };
 
   const colores = Object.keys(SKUGenerator.ATTRIBUTE_CODES)
-    .filter((attr) =>
+    .filter(attr =>
       [
-        "BLANCO",
-        "NEGRO",
-        "ROJO",
-        "AZUL",
-        "VERDE",
-        "AMARILLO",
-        "GRIS",
-        "MARRON",
-        "ROSA",
-        "MORADO",
+        'BLANCO',
+        'NEGRO',
+        'ROJO',
+        'AZUL',
+        'VERDE',
+        'AMARILLO',
+        'GRIS',
+        'MARRON',
+        'ROSA',
+        'MORADO',
       ].includes(attr)
     )
-    .map((color) => ({
+    .map(color => ({
       value: color,
       label: color.charAt(0) + color.slice(1).toLowerCase(),
     }));
 
-  const tamaños = ["PEQUENO", "MEDIANO", "GRANDE", "EXTRA_GRANDE"].map(
-    (tamaño) => ({
+  const tamaños = ['PEQUENO', 'MEDIANO', 'GRANDE', 'EXTRA_GRANDE'].map(
+    tamaño => ({
       value: tamaño,
-      label: tamaño.charAt(0) + tamaño.slice(1).toLowerCase().replace("_", " "),
+      label: tamaño.charAt(0) + tamaño.slice(1).toLowerCase().replace('_', ' '),
     })
   );
 
@@ -402,17 +410,17 @@ export default function ProductoForm({
   if (noProveedoresDisponibles && !loadingProveedores) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className='sm:max-w-[650px]'>
           <DialogHeader>
             <DialogTitle>
-              {formMode === "create"
-                ? "Crear Nuevo Producto"
-                : "Editar Producto"}
+              {formMode === 'create'
+                ? 'Crear Nuevo Producto'
+                : 'Editar Producto'}
             </DialogTitle>
           </DialogHeader>
 
-          <Alert variant="destructive" className="my-4">
-            <AlertCircle className="h-4 w-4" />
+          <Alert variant='destructive' className='my-4'>
+            <AlertCircle className='h-4 w-4' />
             <AlertTitle>No se puede crear un producto</AlertTitle>
             <AlertDescription>
               No hay proveedores registrados en el sistema. Debes crear al menos
@@ -422,17 +430,17 @@ export default function ProductoForm({
 
           <DialogFooter>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => onOpenChange(false)}
             >
               Cerrar
             </Button>
             <Button
-              type="button"
+              type='button'
               onClick={() => {
                 onOpenChange(false);
-                router.push("/dashboard/proveedores");
+                router.push('/dashboard/proveedores');
               }}
             >
               Ir a Proveedores
@@ -445,68 +453,68 @@ export default function ProductoForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[850px] max-h-[85vh] overflow-y-auto">
+      <DialogContent className='sm:max-w-[850px] max-h-[85vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>
-            {formMode === "create" ? "Crear Nuevo Producto" : "Editar Producto"}
+            {formMode === 'create' ? 'Crear Nuevo Producto' : 'Editar Producto'}
           </DialogTitle>
           <DialogDescription>
-            Completa los campos para{" "}
-            {formMode === "create" ? "crear un nuevo" : "actualizar el"}{" "}
+            Completa los campos para{' '}
+            {formMode === 'create' ? 'crear un nuevo' : 'actualizar el'}{' '}
             producto
           </DialogDescription>
         </DialogHeader>
 
-        {error && <ErrorAlert error={error} className="my-2" />}
+        {error && <ErrorAlert error={error} className='my-2' />}
 
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className='grid gap-4 py-4'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               {/* Columna 1: SKU, Nombre y Precio */}
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <div className="flex justify-between items-center">
+              <div className='space-y-4'>
+                <div className='grid gap-2'>
+                  <div className='flex justify-between items-center'>
                     <Label
-                      htmlFor="sku"
-                      className={formErrors.sku ? "text-destructive" : ""}
+                      htmlFor='sku'
+                      className={formErrors.sku ? 'text-destructive' : ''}
                     >
                       SKU
                     </Label>
-                    {formMode === "create" && (
+                    {formMode === 'create' && (
                       <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
+                        type='button'
+                        variant='outline'
+                        size='sm'
                         onClick={toggleSkuMode}
-                        className="h-6 text-xs"
+                        className='h-6 text-xs'
                       >
-                        {skuManual ? "Generar auto" : "Modo manual"}
+                        {skuManual ? 'Generar auto' : 'Modo manual'}
                       </Button>
                     )}
                   </div>
                   <Input
-                    id="sku"
-                    name="sku"
+                    id='sku'
+                    name='sku'
                     value={formData.sku}
                     onChange={handleInputChange}
-                    className={formErrors.sku ? "border-destructive" : ""}
+                    className={formErrors.sku ? 'border-destructive' : ''}
                     required
                     readOnly={!skuManual}
                   />
                   {!skuManual && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className='text-xs text-muted-foreground'>
                       El SKU se genera automáticamente basado en las
                       características del producto.
                     </p>
                   )}
                   {formErrors.sku && (
-                    <p className="text-sm text-destructive">{formErrors.sku}</p>
+                    <p className='text-sm text-destructive'>{formErrors.sku}</p>
                   )}
                 </div>
 
                 <FormField
-                  id="nombre"
-                  label="Nombre"
+                  id='nombre'
+                  label='Nombre'
                   value={formData.nombre}
                   onChange={handleInputChange}
                   error={formErrors.nombre}
@@ -514,42 +522,42 @@ export default function ProductoForm({
                 />
 
                 <FormField
-                  id="precio_unitario"
-                  label="Precio Unitario"
+                  id='precio_unitario'
+                  label='Precio Unitario'
                   value={formData.precio_unitario}
                   onChange={handleInputChange}
                   error={formErrors.precio_unitario}
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type='number'
+                  min='0'
+                  step='0.01'
                   required
                 />
               </div>
 
               {/* Columna 2: Categorías, Proveedor y Bodega */}
-              <div className="space-y-4">
-                <div className="grid gap-2">
+              <div className='space-y-4'>
+                <div className='grid gap-2'>
                   <Label
-                    htmlFor="categoria"
-                    className={formErrors.categoria ? "text-destructive" : ""}
+                    htmlFor='categoria'
+                    className={formErrors.categoria ? 'text-destructive' : ''}
                   >
                     Categoría
                   </Label>
                   <Select
                     value={formData.categoria}
-                    onValueChange={(value) =>
-                      handleSelectChange("categoria", value)
+                    onValueChange={value =>
+                      handleSelectChange('categoria', value)
                     }
                   >
                     <SelectTrigger
                       className={
-                        formErrors.categoria ? "border-destructive" : ""
+                        formErrors.categoria ? 'border-destructive' : ''
                       }
                     >
-                      <SelectValue placeholder="Seleccionar categoría" />
+                      <SelectValue placeholder='Seleccionar categoría' />
                     </SelectTrigger>
                     <SelectContent>
-                      {categorias.map((cat) => (
+                      {categorias.map(cat => (
                         <SelectItem key={cat.value} value={cat.value}>
                           {cat.label}
                         </SelectItem>
@@ -557,37 +565,37 @@ export default function ProductoForm({
                     </SelectContent>
                   </Select>
                   {formErrors.categoria && (
-                    <p className="text-sm text-destructive">
+                    <p className='text-sm text-destructive'>
                       {formErrors.categoria}
                     </p>
                   )}
                 </div>
 
-                <div className="grid gap-2">
+                <div className='grid gap-2'>
                   <Label
-                    htmlFor="subcategoria"
+                    htmlFor='subcategoria'
                     className={
-                      formErrors.subcategoria ? "text-destructive" : ""
+                      formErrors.subcategoria ? 'text-destructive' : ''
                     }
                   >
                     Subcategoría
                   </Label>
                   <Select
                     value={formData.subcategoria}
-                    onValueChange={(value) =>
-                      handleSelectChange("subcategoria", value)
+                    onValueChange={value =>
+                      handleSelectChange('subcategoria', value)
                     }
                     disabled={!formData.categoria}
                   >
                     <SelectTrigger
                       className={
-                        formErrors.subcategoria ? "border-destructive" : ""
+                        formErrors.subcategoria ? 'border-destructive' : ''
                       }
                     >
-                      <SelectValue placeholder="Seleccionar subcategoría" />
+                      <SelectValue placeholder='Seleccionar subcategoría' />
                     </SelectTrigger>
                     <SelectContent>
-                      {getSubcategorias().map((subcat) => (
+                      {getSubcategorias().map(subcat => (
                         <SelectItem key={subcat.value} value={subcat.value}>
                           {subcat.label}
                         </SelectItem>
@@ -595,105 +603,105 @@ export default function ProductoForm({
                     </SelectContent>
                   </Select>
                   {formErrors.subcategoria && (
-                    <p className="text-sm text-destructive">
+                    <p className='text-sm text-destructive'>
                       {formErrors.subcategoria}
                     </p>
                   )}
                 </div>
 
-                <div className="grid gap-2">
+                <div className='grid gap-2'>
                   <Label
-                    htmlFor="proveedor_id"
+                    htmlFor='proveedor_id'
                     className={
-                      formErrors.proveedor_id ? "text-destructive" : ""
+                      formErrors.proveedor_id ? 'text-destructive' : ''
                     }
                   >
-                    Proveedor <span className="text-destructive">*</span>
+                    Proveedor <span className='text-destructive'>*</span>
                   </Label>
                   <Select
                     value={getSelectValue(formData.proveedor_id)}
-                    onValueChange={(value) =>
-                      handleSelectChange("proveedor_id", value)
+                    onValueChange={value =>
+                      handleSelectChange('proveedor_id', value)
                     }
                     disabled={loadingProveedores}
                   >
                     <SelectTrigger
                       className={
-                        formErrors.proveedor_id ? "border-destructive" : ""
+                        formErrors.proveedor_id ? 'border-destructive' : ''
                       }
                     >
-                      <SelectValue placeholder="Seleccionar proveedor" />
+                      <SelectValue placeholder='Seleccionar proveedor' />
                     </SelectTrigger>
                     <SelectContent>
                       {loadingProveedores ? (
-                        <SelectItem value="loading" disabled>
-                          <div className="flex items-center">
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <SelectItem value='loading' disabled>
+                          <div className='flex items-center'>
+                            <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                             Cargando proveedores...
                           </div>
                         </SelectItem>
                       ) : proveedorError ? (
-                        <SelectItem value="error" disabled>
+                        <SelectItem value='error' disabled>
                           Error al cargar proveedores
                         </SelectItem>
                       ) : proveedores.length > 0 ? (
-                        proveedores.map((proveedor) => (
+                        proveedores.map(proveedor => (
                           <SelectItem
                             key={proveedor.id}
                             value={proveedor.id.toString()}
                           >
-                            {proveedor.nombre}{" "}
-                            {proveedor.codigo ? `(${proveedor.codigo})` : ""}
+                            {proveedor.nombre}{' '}
+                            {proveedor.codigo ? `(${proveedor.codigo})` : ''}
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no-proveedores" disabled>
+                        <SelectItem value='no-proveedores' disabled>
                           No hay proveedores disponibles
                         </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   {formErrors.proveedor_id && (
-                    <p className="text-sm text-destructive">
+                    <p className='text-sm text-destructive'>
                       {formErrors.proveedor_id}
                     </p>
                   )}
                   {proveedorError && (
-                    <p className="text-xs text-destructive">{proveedorError}</p>
+                    <p className='text-xs text-destructive'>{proveedorError}</p>
                   )}
                 </div>
 
-                <div className="grid gap-2">
+                <div className='grid gap-2'>
                   <Label
-                    htmlFor="bodega_id"
-                    className={formErrors.bodega_id ? "text-destructive" : ""}
+                    htmlFor='bodega_id'
+                    className={formErrors.bodega_id ? 'text-destructive' : ''}
                   >
-                    Bodega <span className="text-destructive">*</span>
+                    Bodega <span className='text-destructive'>*</span>
                   </Label>
                   <Select
                     value={getSelectValue(formData.bodega_id)}
-                    onValueChange={(value) =>
-                      handleSelectChange("bodega_id", value)
+                    onValueChange={value =>
+                      handleSelectChange('bodega_id', value)
                     }
                     disabled={loadingBodegas}
                   >
                     <SelectTrigger
                       className={
-                        formErrors.bodega_id ? "border-destructive" : ""
+                        formErrors.bodega_id ? 'border-destructive' : ''
                       }
                     >
-                      <SelectValue placeholder="Seleccionar bodega" />
+                      <SelectValue placeholder='Seleccionar bodega' />
                     </SelectTrigger>
                     <SelectContent>
                       {loadingBodegas ? (
-                        <SelectItem value="loading" disabled>
-                          <div className="flex items-center">
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <SelectItem value='loading' disabled>
+                          <div className='flex items-center'>
+                            <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                             Cargando bodegas...
                           </div>
                         </SelectItem>
                       ) : bodegas.length > 0 ? (
-                        bodegas.map((bodega) => (
+                        bodegas.map(bodega => (
                           <SelectItem
                             key={bodega.id}
                             value={bodega.id.toString()}
@@ -702,14 +710,14 @@ export default function ProductoForm({
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no-bodegas" disabled>
+                        <SelectItem value='no-bodegas' disabled>
                           No hay bodegas disponibles
                         </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   {formErrors.bodega_id && (
-                    <p className="text-sm text-destructive">
+                    <p className='text-sm text-destructive'>
                       {formErrors.bodega_id}
                     </p>
                   )}
@@ -717,27 +725,25 @@ export default function ProductoForm({
               </div>
 
               {/* Columna 3: Atributos y Stock */}
-              <div className="space-y-4">
-                <div className="grid gap-2">
+              <div className='space-y-4'>
+                <div className='grid gap-2'>
                   <Label
-                    htmlFor="color"
-                    className={formErrors.color ? "text-destructive" : ""}
+                    htmlFor='color'
+                    className={formErrors.color ? 'text-destructive' : ''}
                   >
                     Color
                   </Label>
                   <Select
                     value={formData.color}
-                    onValueChange={(value) =>
-                      handleSelectChange("color", value)
-                    }
+                    onValueChange={value => handleSelectChange('color', value)}
                   >
                     <SelectTrigger
-                      className={formErrors.color ? "border-destructive" : ""}
+                      className={formErrors.color ? 'border-destructive' : ''}
                     >
-                      <SelectValue placeholder="Seleccionar color" />
+                      <SelectValue placeholder='Seleccionar color' />
                     </SelectTrigger>
                     <SelectContent>
-                      {colores.map((color) => (
+                      {colores.map(color => (
                         <SelectItem key={color.value} value={color.value}>
                           {color.label}
                         </SelectItem>
@@ -745,32 +751,30 @@ export default function ProductoForm({
                     </SelectContent>
                   </Select>
                   {formErrors.color && (
-                    <p className="text-sm text-destructive">
+                    <p className='text-sm text-destructive'>
                       {formErrors.color}
                     </p>
                   )}
                 </div>
 
-                <div className="grid gap-2">
+                <div className='grid gap-2'>
                   <Label
-                    htmlFor="tamaño"
-                    className={formErrors.tamaño ? "text-destructive" : ""}
+                    htmlFor='tamaño'
+                    className={formErrors.tamaño ? 'text-destructive' : ''}
                   >
                     Tamaño
                   </Label>
                   <Select
                     value={formData.tamaño}
-                    onValueChange={(value) =>
-                      handleSelectChange("tamaño", value)
-                    }
+                    onValueChange={value => handleSelectChange('tamaño', value)}
                   >
                     <SelectTrigger
-                      className={formErrors.tamaño ? "border-destructive" : ""}
+                      className={formErrors.tamaño ? 'border-destructive' : ''}
                     >
-                      <SelectValue placeholder="Seleccionar tamaño" />
+                      <SelectValue placeholder='Seleccionar tamaño' />
                     </SelectTrigger>
                     <SelectContent>
-                      {tamaños.map((tamaño) => (
+                      {tamaños.map(tamaño => (
                         <SelectItem key={tamaño.value} value={tamaño.value}>
                           {tamaño.label}
                         </SelectItem>
@@ -778,44 +782,44 @@ export default function ProductoForm({
                     </SelectContent>
                   </Select>
                   {formErrors.tamaño && (
-                    <p className="text-sm text-destructive">
+                    <p className='text-sm text-destructive'>
                       {formErrors.tamaño}
                     </p>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className='grid grid-cols-2 gap-4'>
                   <FormField
-                    id="stock_minimo"
-                    label="Stock Mínimo"
+                    id='stock_minimo'
+                    label='Stock Mínimo'
                     value={formData.stock_minimo}
                     onChange={handleInputChange}
                     error={formErrors.stock_minimo}
-                    type="number"
-                    min="0"
+                    type='number'
+                    min='0'
                     required
                   />
 
-                  {formMode === "create" ? (
+                  {formMode === 'create' ? (
                     <FormField
-                      id="stock_inicial"
-                      label="Stock Inicial"
+                      id='stock_inicial'
+                      label='Stock Inicial'
                       value={formData.stock_inicial}
                       onChange={handleInputChange}
                       error={formErrors.stock_inicial}
-                      type="number"
-                      min="0"
+                      type='number'
+                      min='0'
                       required
                     />
                   ) : (
                     <FormField
-                      id="stock_actual"
-                      label="Stock Actual"
+                      id='stock_actual'
+                      label='Stock Actual'
                       value={formData.stock_actual}
                       onChange={handleInputChange}
                       error={formErrors.stock_actual}
-                      type="number"
-                      min="0"
+                      type='number'
+                      min='0'
                       required
                       disabled={true} // <--- Deshabilita el campo en modo edición
                     />
@@ -825,8 +829,8 @@ export default function ProductoForm({
             </div>
 
             <FormField
-              id="descripcion"
-              label="Descripción"
+              id='descripcion'
+              label='Descripción'
               value={formData.descripcion}
               onChange={handleInputChange}
               error={formErrors.descripcion}
@@ -837,14 +841,14 @@ export default function ProductoForm({
 
           <DialogFooter>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => onOpenChange(false)}
             >
               Cancelar
             </Button>
-            <Button type="submit">
-              {formMode === "create" ? "Crear" : "Actualizar"}
+            <Button type='submit'>
+              {formMode === 'create' ? 'Crear' : 'Actualizar'}
             </Button>
           </DialogFooter>
         </form>
@@ -861,7 +865,7 @@ function FormField({
   onChange,
   error,
   required = false,
-  type = "text",
+  type = 'text',
   min,
   step,
   isTextarea = false,
@@ -869,8 +873,8 @@ function FormField({
 }) {
   const Component = isTextarea ? Textarea : Input;
   const tooltip =
-    disabled && id === "stock_actual"
-      ? "El stock solo se puede modificar desde el módulo de inventario"
+    disabled && id === 'stock_actual'
+      ? 'El stock solo se puede modificar desde el módulo de inventario'
       : undefined;
 
   const inputField = (
@@ -880,7 +884,7 @@ function FormField({
       type={type}
       value={value}
       onChange={onChange}
-      className={error ? "border-destructive" : ""}
+      className={error ? 'border-destructive' : ''}
       required={required}
       min={min}
       step={step}
@@ -889,9 +893,9 @@ function FormField({
   );
 
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={id} className={error ? "text-destructive" : ""}>
-        {label} {required && <span className="text-destructive">*</span>}
+    <div className='grid gap-2'>
+      <Label htmlFor={id} className={error ? 'text-destructive' : ''}>
+        {label} {required && <span className='text-destructive'>*</span>}
       </Label>
       {tooltip ? (
         <TooltipProvider>
@@ -905,7 +909,7 @@ function FormField({
       ) : (
         inputField
       )}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className='text-sm text-destructive'>{error}</p>}
     </div>
   );
 }

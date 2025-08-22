@@ -12,21 +12,19 @@ import AjusteInventarioModal from './components/AjusteInventarioModal';
 import StockDetalleModal from './components/StockDetalleModal';
 import KardexModal from './components/KardexModal';
 
-// Hooks personalizados
+// Hooks optimizados de React Query
+import {
+  useInventarioProductosOptimized,
+  useInventarioBodegasOptimized,
+  useInventarioAlertasOptimized,
+  useSincronizarInventarioOptimized,
+} from '@/src/hooks/useInventarioOptimized';
+
+// Hooks personalizados para filtros y paginación
 import { useInventarioFilters } from './hooks/useInventarioFilters';
 import { useInventarioPagination } from './hooks/useInventarioPagination';
-import { useInventarioData } from './hooks/useInventarioData';
 
 export default function InventarioPage() {
-  // Hook para datos del inventario (se encarga de cargar automáticamente)
-  const {
-    productos,
-    alertasStock,
-    bodegas,
-    loading,
-    cargarDatos
-  } = useInventarioData();
-  
   // Estados de modales
   const [ajusteModalOpen, setAjusteModalOpen] = useState(false);
   const [stockDetalleModalOpen, setStockDetalleModalOpen] = useState(false);
@@ -43,24 +41,46 @@ export default function InventarioPage() {
     setSelectedCategoria,
     selectedEstado,
     setSelectedEstado,
-    resetFilters
+    resetFilters,
   } = useInventarioFilters();
+
+  // Hooks de React Query para datos
+  const {
+    data: productos = [],
+    isLoading: productosLoading,
+    error: productosError,
+    refetch: refetchProductos,
+  } = useInventarioProductosOptimized();
+
+  const { data: bodegas = [], isLoading: bodegasLoading } =
+    useInventarioBodegasOptimized(true);
+
+  const { data: alertasStock = [], isLoading: alertasLoading } =
+    useInventarioAlertasOptimized();
+
+  // Hook para sincronización manual
+  const { sincronizarTodo } = useSincronizarInventarioOptimized();
 
   // Productos filtrados (memoizado para eficiencia)
   const productosFiltrados = useMemo(() => {
     return productos.filter(producto => {
       // Filtro de búsqueda
-      const matchSearch = !searchTerm || 
+      const matchSearch =
+        !searchTerm ||
         producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         producto.sku.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Filtro de categoría
-      const matchCategoria = selectedCategoria === 'todas' || 
+      const matchCategoria =
+        selectedCategoria === 'todas' ||
         producto.categoria === selectedCategoria;
 
       // Filtro de bodega (corregido)
-      const matchBodega = selectedBodega === 'todas' || 
-        producto.stocks_bodega?.some(stock => stock.bodega_id.toString() === selectedBodega);
+      const matchBodega =
+        selectedBodega === 'todas' ||
+        producto.stocks_bodega?.some(
+          stock => stock.bodega_id.toString() === selectedBodega
+        );
 
       // Filtro de estado
       let matchEstado = true;
@@ -68,7 +88,9 @@ export default function InventarioPage() {
         if (selectedEstado === 'sin_stock') {
           matchEstado = producto.stock_actual === 0;
         } else if (selectedEstado === 'stock_bajo') {
-          matchEstado = producto.stock_actual <= producto.stock_minimo && producto.stock_actual > 0;
+          matchEstado =
+            producto.stock_actual <= producto.stock_minimo &&
+            producto.stock_actual > 0;
         } else if (selectedEstado === 'normal') {
           matchEstado = producto.stock_actual > producto.stock_minimo;
         }
@@ -76,38 +98,43 @@ export default function InventarioPage() {
 
       return matchSearch && matchCategoria && matchBodega && matchEstado;
     });
-  }, [productos, searchTerm, selectedCategoria, selectedBodega, selectedEstado]);
+  }, [
+    productos,
+    searchTerm,
+    selectedCategoria,
+    selectedBodega,
+    selectedEstado,
+  ]);
 
   // Hook personalizado para paginación
-  const {
-    pagina,
-    setPagina,
-    productosPagina,
-    totalPaginas
-  } = useInventarioPagination(productosFiltrados, 10);
+  const { pagina, setPagina, productosPagina, totalPaginas } =
+    useInventarioPagination(productosFiltrados, 10);
 
   // Categorías únicas (memoizado)
   const categorias = useMemo(() => {
     return [...new Set(productos.map(p => p.categoria))];
   }, [productos]);
 
+  // Estados de loading
+  const isLoading = productosLoading || bodegasLoading || alertasLoading;
+
   // Funciones para manejar modales
-  const handleAjusteStock = (producto) => {
+  const handleAjusteStock = producto => {
     setSelectedProducto(producto);
     setAjusteModalOpen(true);
   };
 
-  const handleVerDetalle = (producto) => {
+  const handleVerDetalle = producto => {
     setSelectedProducto(producto);
     setStockDetalleModalOpen(true);
   };
 
-  const handleVerKardex = (producto) => {
+  const handleVerKardex = producto => {
     setSelectedProducto(producto);
     setKardexModalOpen(true);
   };
 
-  const handleModalClose = (modalType) => {
+  const handleModalClose = modalType => {
     switch (modalType) {
       case 'ajuste':
         setAjusteModalOpen(false);
@@ -123,43 +150,67 @@ export default function InventarioPage() {
   };
 
   const handleAjusteSuccess = async () => {
-    // Esperar un poco y recargar datos
-    await new Promise(res => setTimeout(res, 500));
-    await cargarDatos();
+    // React Query se encarga automáticamente de invalidar y refetch
+    // Solo cerramos el modal
     handleModalClose('ajuste');
+    // El toast de éxito se maneja automáticamente en el hook
   };
 
-  // Loading state
-  if (loading) {
+  const handleRefresh = () => {
+    // Sincronizar todo el inventario
+    sincronizarTodo();
+    refetchProductos();
+  };
+
+  // Manejo de errores
+  if (productosError) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className='p-6 md:p-8'>
+        <div className='text-center py-8'>
+          <h2 className='text-xl font-semibold text-red-600 mb-2'>
+            Error al cargar el inventario
+          </h2>
+          <p className='text-muted-foreground mb-4'>
+            {productosError.message || 'Ha ocurrido un error inesperado'}
+          </p>
+          <Button onClick={handleRefresh} variant='outline'>
+            <RefreshCw className='h-4 w-4 mr-2' />
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-96'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8">
+    <div className='p-6 md:p-8'>
       {/* Header */}
-      <div className="mb-8 flex justify-between items-start">
+      <div className='mb-8 flex justify-between items-start'>
         <div>
-          <h1 className="text-3xl font-bold mb-2">Inventario</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold mb-2'>Inventario</h1>
+          <p className='text-muted-foreground'>
             Gestiona el stock de productos y movimientos de inventario
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={cargarDatos}
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <Button variant='outline' onClick={handleRefresh} disabled={isLoading}>
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+          />
           Actualizar
         </Button>
       </div>
 
       {/* Estadísticas */}
-      <InventarioStats 
+      <InventarioStats
         productos={productos}
         alertasStock={alertasStock}
         bodegas={bodegas}
@@ -190,7 +241,7 @@ export default function InventarioPage() {
         pagina={pagina}
         totalPaginas={totalPaginas}
         onPageChange={setPagina}
-        loading={loading}
+        loading={isLoading}
       />
 
       {/* Modales */}
@@ -203,13 +254,13 @@ export default function InventarioPage() {
             bodegas={bodegas}
             onSuccess={handleAjusteSuccess}
           />
-          
+
           <StockDetalleModal
             open={stockDetalleModalOpen}
             onClose={() => handleModalClose('detalle')}
             producto={selectedProducto}
           />
-          
+
           <KardexModal
             open={kardexModalOpen}
             onClose={() => handleModalClose('kardex')}
