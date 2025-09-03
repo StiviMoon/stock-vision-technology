@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +25,9 @@ import { useInventarioFilters } from './hooks/useInventarioFilters';
 import { useInventarioPagination } from './hooks/useInventarioPagination';
 
 export default function InventarioPage() {
+  // Estado para animaciones de entrada
+  const [isVisible, setIsVisible] = useState(false);
+
   // Estados de modales
   const [ajusteModalOpen, setAjusteModalOpen] = useState(false);
   const [stockDetalleModalOpen, setStockDetalleModalOpen] = useState(false);
@@ -118,6 +121,11 @@ export default function InventarioPage() {
   // Estados de loading
   const isLoading = productosLoading || bodegasLoading || alertasLoading;
 
+  // Activar animaciones de entrada
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   // Funciones para manejar modales
   const handleAjusteStock = producto => {
     setSelectedProducto(producto);
@@ -192,16 +200,33 @@ export default function InventarioPage() {
   }
 
   return (
-    <div className='p-6 md:p-6'>
-      {/* Header */}
-      <div className='mb-8 flex justify-between items-start'>
+    <div className='p-6 md:p-6 space-y-6 flex flex-col'>
+      {/* Header con animación */}
+      <div
+        className={`mb-8 flex justify-between items-start transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
+        style={{ transitionDelay: '200ms' }}
+      >
         <div>
-          <h1 className='text-3xl font-bold mb-2'>Inventario</h1>
-          <p className='text-muted-foreground'>
+          <h1
+            className={`text-3xl font-bold mb-2 transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+            style={{ transitionDelay: '300ms' }}
+          >
+            Inventario
+          </h1>
+          <p
+            className={`text-muted-foreground transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
+            style={{ transitionDelay: '400ms' }}
+          >
             Gestiona el stock de productos y movimientos de inventario
           </p>
         </div>
-        <Button variant='outline' onClick={handleRefresh} disabled={isLoading}>
+        <Button
+          variant='outline'
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+          style={{ transitionDelay: '500ms' }}
+        >
           <RefreshCw
             className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
           />
@@ -209,40 +234,55 @@ export default function InventarioPage() {
         </Button>
       </div>
 
-      {/* Estadísticas */}
-      <InventarioStats
-        productos={productos}
-        alertasStock={alertasStock}
-        bodegas={bodegas}
-      />
+      {/* Estadísticas con animación */}
+      <div
+        className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        style={{ transitionDelay: '600ms' }}
+      >
+        <InventarioStats
+          productos={productos}
+          alertasStock={alertasStock}
+          bodegas={bodegas}
+        />
+      </div>
 
-      {/* Filtros */}
-      <InventarioFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategoria={selectedCategoria}
-        setSelectedCategoria={setSelectedCategoria}
-        selectedEstado={selectedEstado}
-        setSelectedEstado={setSelectedEstado}
-        selectedBodega={selectedBodega}
-        setSelectedBodega={setSelectedBodega}
-        categorias={categorias}
-        bodegas={bodegas}
-        onReset={resetFilters}
-        totalProductos={productosFiltrados.length}
-      />
+      {/* Filtros con animación */}
+      <div
+        className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        style={{ transitionDelay: '700ms' }}
+      >
+        <InventarioFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedCategoria={selectedCategoria}
+          setSelectedCategoria={setSelectedCategoria}
+          selectedEstado={selectedEstado}
+          setSelectedEstado={setSelectedEstado}
+          selectedBodega={selectedBodega}
+          setSelectedBodega={setSelectedBodega}
+          categorias={categorias}
+          bodegas={bodegas}
+          onReset={resetFilters}
+          totalProductos={productosFiltrados.length}
+        />
+      </div>
 
-      {/* Tabla de productos */}
-      <InventarioTable
-        productos={productosPagina}
-        onAjusteStock={handleAjusteStock}
-        onVerDetalle={handleVerDetalle}
-        onVerKardex={handleVerKardex}
-        pagina={pagina}
-        totalPaginas={totalPaginas}
-        onPageChange={setPagina}
-        loading={isLoading}
-      />
+      {/* Tabla de productos con animación */}
+      <div
+        className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        style={{ transitionDelay: '800ms' }}
+      >
+        <InventarioTable
+          productos={productosPagina}
+          onAjusteStock={handleAjusteStock}
+          onVerDetalle={handleVerDetalle}
+          onVerKardex={handleVerKardex}
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onPageChange={setPagina}
+          loading={isLoading}
+        />
+      </div>
 
       {/* Modales */}
       {selectedProducto && (
