@@ -147,6 +147,10 @@ docker-compose logs svt-postgres
 
 # Reiniciar servicio
 docker-compose restart svt-postgres
+
+# Ejecutar
+uvicorn main:app --reload
+
 ```
 
 ### **Si pgAdmin No Carga**

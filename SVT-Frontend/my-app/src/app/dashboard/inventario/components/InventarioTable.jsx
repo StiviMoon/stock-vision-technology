@@ -1,6 +1,6 @@
 
 // components/InventarioTable.jsx
-import { Eye, Edit, History, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Edit, History, ChevronLeft, ChevronRight, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useState, useEffect } from 'react';
+import { proveedorService } from '@/src/services/api';
 
 const getEstadoStock = (stockActual, stockMinimo) => {
   if (stockActual === 0) {
@@ -26,7 +28,7 @@ const BodegasCell = ({ producto }) => {
   if (!producto.stocks_bodega || producto.stocks_bodega.length === 0) {
     return <span className="text-muted-foreground">Sin bodega</span>;
   }
-  
+
   // Si tiene una sola bodega
   if (producto.stocks_bodega.length === 1) {
     const stock = producto.stocks_bodega[0];
@@ -39,7 +41,7 @@ const BodegasCell = ({ producto }) => {
       </div>
     );
   }
-  
+
   // Si tiene múltiples bodegas
   return (
     <div className="space-y-1">
@@ -59,14 +61,32 @@ const getBodegaNombre = (producto) => {
   if (!producto.stocks_bodega || producto.stocks_bodega.length === 0) {
     return 'Sin bodega';
   }
-  
+
   // Si tiene una sola bodega, mostrar solo el nombre
   if (producto.stocks_bodega.length === 1) {
     return producto.stocks_bodega[0].bodega.nombre;
   }
-  
+
   // Si tiene múltiples bodegas, mostrar cantidad de bodegas
   return `${producto.stocks_bodega.length} bodegas`;
+};
+
+const ProveedorCell = ({ producto, proveedores }) => {
+  if (!producto.proveedor_id) {
+    return <span className="text-muted-foreground">Sin proveedor</span>;
+  }
+
+  // Buscar el proveedor por ID
+  const proveedor = proveedores.find(p => p.id === producto.proveedor_id);
+  const nombreProveedor = proveedor ? proveedor.nombre : `Proveedor ${producto.proveedor_id}`;
+
+  return (
+    <div className="flex items-center gap-1">
+    <span className="text-sm">
+        {nombreProveedor}
+      </span>
+    </div>
+  );
 };
 
 export default function InventarioTable({
@@ -79,6 +99,25 @@ export default function InventarioTable({
   onPageChange,
   loading
 }) {
+  const [proveedores, setProveedores] = useState([]);
+  const [loadingProveedores, setLoadingProveedores] = useState(false);
+
+  // Cargar proveedores al montar el componente
+  useEffect(() => {
+    const fetchProveedores = async () => {
+      try {
+        setLoadingProveedores(true);
+        const proveedoresData = await proveedorService.getProveedores();
+        setProveedores(proveedoresData);
+      } catch (error) {
+        console.error('Error al cargar proveedores:', error);
+      } finally {
+        setLoadingProveedores(false);
+      }
+    };
+
+    fetchProveedores();
+  }, []);
   return (
     <Card>
       <CardHeader>
@@ -92,6 +131,7 @@ export default function InventarioTable({
                 <TableHead>SKU</TableHead>
                 <TableHead>Producto</TableHead>
                 <TableHead>Categoría</TableHead>
+                <TableHead>Proveedor</TableHead>
                 <TableHead>Bodega</TableHead>
                 <TableHead className="text-right">Stock Actual</TableHead>
                 <TableHead className="text-right">Stock Mínimo</TableHead>
@@ -103,7 +143,7 @@ export default function InventarioTable({
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2"></div>
                       Cargando productos...
@@ -112,7 +152,7 @@ export default function InventarioTable({
                 </TableRow>
               ) : productos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     No se encontraron productos con los filtros aplicados
                   </TableCell>
                 </TableRow>
@@ -124,6 +164,9 @@ export default function InventarioTable({
                       <TableCell className="font-medium">{producto.sku}</TableCell>
                       <TableCell>{producto.nombre}</TableCell>
                       <TableCell>{producto.categoria}</TableCell>
+                      <TableCell>
+                  <ProveedorCell producto={producto} proveedores={proveedores} />
+                </TableCell>
                       <TableCell>
                         <BodegasCell producto={producto} />
                       </TableCell>

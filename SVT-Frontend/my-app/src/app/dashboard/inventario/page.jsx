@@ -192,7 +192,7 @@ export default function InventarioPage() {
   }
 
   return (
-    <div className='p-6 md:p-8'>
+    <div className='p-6 md:p-6'>
       {/* Header */}
       <div className='mb-8 flex justify-between items-start'>
         <div>

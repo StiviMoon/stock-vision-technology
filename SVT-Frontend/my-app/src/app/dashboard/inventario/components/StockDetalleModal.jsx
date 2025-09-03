@@ -17,18 +17,29 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { inventarioService } from '@/src/services/api';
-import { Package, Building2, MapPin } from 'lucide-react';
+import { inventarioService, proveedorService } from '@/src/services/api';
+import { Package, Building2, MapPin, User } from 'lucide-react';
 
 export default function StockDetalleModal({ open, onClose, producto }) {
   const [loading, setLoading] = useState(true);
   const [stockData, setStockData] = useState(null);
+  const [proveedores, setProveedores] = useState([]);
 
   useEffect(() => {
     if (open && producto) {
       cargarStockDetalle();
+      cargarProveedores();
     }
   }, [open, producto]);
+
+  const cargarProveedores = async () => {
+    try {
+      const proveedoresData = await proveedorService.getProveedores();
+      setProveedores(proveedoresData);
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+    }
+  };
 
   const cargarStockDetalle = async () => {
     try {
@@ -48,7 +59,7 @@ export default function StockDetalleModal({ open, onClose, producto }) {
       'STOCK_BAJO': 'warning',
       'SIN_STOCK': 'destructive'
     };
-    
+
     const labels = {
       'NORMAL': 'Stock Normal',
       'STOCK_BAJO': 'Stock Bajo',
@@ -77,7 +88,7 @@ export default function StockDetalleModal({ open, onClose, producto }) {
         ) : stockData ? (
           <div className="space-y-6">
             {/* Información general */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+            <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
               <div>
                 <p className="text-sm text-muted-foreground">SKU</p>
                 <p className="font-medium">{producto.sku}</p>
@@ -85,6 +96,22 @@ export default function StockDetalleModal({ open, onClose, producto }) {
               <div>
                 <p className="text-sm text-muted-foreground">Categoría</p>
                 <p className="font-medium">{producto.categoria}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Proveedor</p>
+                <div className="flex items-center gap-1">
+                  <Building2 className="h-3 w-3 text-blue-600" />
+                  <p className="font-medium">
+                    {producto.proveedor_id ? (
+                      (() => {
+                        const proveedor = proveedores.find(p => p.id === producto.proveedor_id);
+                        return proveedor ? proveedor.nombre : `ID: ${producto.proveedor_id}`;
+                      })()
+                    ) : (
+                      'Sin proveedor'
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -94,7 +121,7 @@ export default function StockDetalleModal({ open, onClose, producto }) {
                 <Package className="h-4 w-4" />
                 Resumen de Stock
               </h3>
-              
+
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 border rounded-lg">
                   <p className="text-2xl font-bold">{stockData.stock_total}</p>
@@ -117,7 +144,7 @@ export default function StockDetalleModal({ open, onClose, producto }) {
                 <Building2 className="h-4 w-4" />
                 Stock por Bodega
               </h3>
-              
+
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -137,10 +164,10 @@ export default function StockDetalleModal({ open, onClose, producto }) {
                       </TableRow>
                     ) : (
                       stockData.stock_por_bodega.map((stock) => {
-                        const porcentaje = stockData.stock_total > 0 
+                        const porcentaje = stockData.stock_total > 0
                           ? ((stock.cantidad / stockData.stock_total) * 100).toFixed(1)
                           : 0;
-                        
+
                         return (
                           <TableRow key={stock.id}>
                             <TableCell className="font-medium">
@@ -158,8 +185,8 @@ export default function StockDetalleModal({ open, onClose, producto }) {
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-2">
                                 <div className="w-16 bg-gray-200 rounded-full h-2">
-                                  <div 
-                                    className="bg-primary h-2 rounded-full" 
+                                  <div
+                                    className="bg-primary h-2 rounded-full"
                                     style={{ width: `${porcentaje}%` }}
                                   />
                                 </div>

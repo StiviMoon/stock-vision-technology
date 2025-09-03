@@ -21,8 +21,10 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { MotivoMovimiento } from '@/src/services/interfaces';
+import { getMotivosAjuste } from '@/src/config/motivosMovimiento';
 import { useAjustarInventarioOptimized } from '@/src/hooks/useInventarioOptimized';
+import { Building2 } from 'lucide-react';
+import { proveedorService } from '@/src/services/api';
 
 export default function AjusteInventarioModal({
   open,
@@ -38,6 +40,7 @@ export default function AjusteInventarioModal({
     motivo: '',
     observaciones: '',
   });
+  const [proveedores, setProveedores] = useState([]);
 
   // Hook de React Query para ajustar inventario
   const ajustarInventario = useAjustarInventarioOptimized();
@@ -52,15 +55,23 @@ export default function AjusteInventarioModal({
     }
   }, [bodegas]);
 
-  const motivosAjuste = [
-    { value: MotivoMovimiento.AJUSTE_STOCK, label: 'Ajuste de Stock' },
-    { value: MotivoMovimiento.CONTEO_FISICO, label: 'Conteo Físico' },
-    { value: MotivoMovimiento.PRODUCTO_DANADO, label: 'Producto Dañado' },
-    { value: MotivoMovimiento.PRODUCTO_VENCIDO, label: 'Producto Vencido' },
-    { value: MotivoMovimiento.ERROR_SISTEMA, label: 'Error en Sistema' },
-    { value: MotivoMovimiento.ROBO_PERDIDA, label: 'Robo/Pérdida' },
-    { value: MotivoMovimiento.OTRO, label: 'Otro' },
-  ];
+  // Cargar proveedores al abrir el modal
+  useEffect(() => {
+    if (open) {
+      cargarProveedores();
+    }
+  }, [open]);
+
+  const cargarProveedores = async () => {
+    try {
+      const proveedoresData = await proveedorService.getProveedores();
+      setProveedores(proveedoresData);
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+    }
+  };
+
+  const motivosAjuste = getMotivosAjuste();
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -123,7 +134,7 @@ export default function AjusteInventarioModal({
         <form onSubmit={handleSubmit}>
           <div className='grid gap-4 py-4'>
             {/* Información del producto */}
-            <div className='grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg'>
+            <div className='grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg'>
               <div>
                 <p className='text-sm text-muted-foreground'>SKU</p>
                 <p className='font-medium'>{producto?.sku}</p>
@@ -131,6 +142,22 @@ export default function AjusteInventarioModal({
               <div>
                 <p className='text-sm text-muted-foreground'>Stock Actual</p>
                 <p className='font-medium'>{producto?.stock_actual} unidades</p>
+              </div>
+              <div>
+                <p className='text-sm text-muted-foreground'>Proveedor</p>
+                <div className="flex items-center gap-1">
+                  <Building2 className="h-3 w-3 text-blue-600" />
+                  <p className='font-medium'>
+                    {producto?.proveedor_id ? (
+                      (() => {
+                        const proveedor = proveedores.find(p => p.id === producto.proveedor_id);
+                        return proveedor ? proveedor.nombre : `ID: ${producto.proveedor_id}`;
+                      })()
+                    ) : (
+                      'Sin proveedor'
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
 
