@@ -6,6 +6,7 @@ from routers import (
     users,
     productos,
     proveedores,
+    categorias,
     chatbot,
     inventario,
 )
@@ -33,6 +34,7 @@ app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(productos.router, prefix="/productos", tags=["Productos"])
 app.include_router(proveedores.router, prefix="/proveedores", tags=["Proveedores"])
+app.include_router(categorias.router, prefix="/categorias", tags=["Categorías"])
 app.include_router(chatbot.router, prefix="/chatbot", tags=["Chatbot IA"])
 app.include_router(inventario.router)
 

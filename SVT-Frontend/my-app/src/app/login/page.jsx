@@ -3,54 +3,52 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { authService } from "../../services/api.ts"; // Ajusta la ruta según donde guardes el archivo
+import { useAuthContext } from "../../context/AuthContext";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+  const { login, loading, user } = useAuthContext();
 
   useEffect(() => {
-    // Activar animaciones una vez que el componente se monte
     setIsVisible(true);
   }, []);
+
+  useEffect(() => {
+    if (user && !loading) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      setLoading(true);
-
-      // Usar el servicio de autenticación para el login
-      await authService.login(email, password);
-
-      console.log("Login exitoso");
-      router.push("/dashboard"); // Redirigir a la página de dashboard
+      await login(email, password);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 100);
     } catch (err) {
       console.error("Error durante el login:", err);
 
       let errorMessage = "Error al iniciar sesión";
 
       if (err.response) {
-        // El servidor respondió con un código de estado fuera del rango 2xx
         if (err.response.status === 401) {
           errorMessage = "Credenciales incorrectas";
         } else if (err.response.data && err.response.data.detail) {
           errorMessage = err.response.data.detail;
         }
       } else if (err.request) {
-        // La solicitud se realizó pero no se recibió respuesta
         errorMessage = "No se pudo conectar con el servidor";
       }
 
       setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 

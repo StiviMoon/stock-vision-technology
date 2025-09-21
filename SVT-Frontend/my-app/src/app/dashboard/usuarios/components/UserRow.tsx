@@ -2,52 +2,100 @@
 
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Check, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
 import { UserActions } from './UserActions';
-import { UserRoleSelector } from './UserRoleSelector';
 import { UserRowProps, getRoleBadgeColor, getRoleDisplayName } from '../types';
 
-export function UserRow({ usuario, onRolChange, onDeleteUser }: UserRowProps) {
+export function UserRow({
+  usuario,
+  onDeleteUser,
+  onEditUser,
+  canEditUsers = false,
+  canDeleteUsers = false
+}: UserRowProps) {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
+      {/* Email */}
       <TableCell className="py-4">
         <div>
-          {usuario.nombre && (
-            <div className="font-semibold text-foreground">{usuario.nombre}</div>
-          )}
-          <div className={usuario.nombre ? "text-sm text-muted-foreground" : "font-medium"}>
-            {usuario.email}
-          </div>
-          {usuario.lastLogin && (
-            <div className="text-xs text-muted-foreground mt-1 flex items-center">
-              <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
-              Último acceso: {new Date(usuario.lastLogin).toLocaleString()}
+          <div className="font-medium text-foreground">{usuario.email}</div>
+        </div>
+      </TableCell>
+
+      {/* Nombre */}
+      <TableCell className="py-4">
+        <div>
+          {usuario.nombre || usuario.apellido ? (
+            <div className="font-medium">
+              {usuario.nombre} {usuario.apellido}
             </div>
+          ) : (
+            <span className="text-muted-foreground text-sm">Sin nombre</span>
           )}
         </div>
       </TableCell>
+
+      {/* Rol */}
       <TableCell>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <Badge variant="outline" className={`${getRoleBadgeColor(usuario.rol)} whitespace-nowrap mb-2 sm:mb-0 w-[125px]`}>
-            {getRoleDisplayName(usuario.rol)}
-          </Badge>
-          <UserRoleSelector
-            currentRole={usuario.rol}
-            onRoleChange={(role) => onRolChange(usuario.id, role)}
-          />
+        <Badge variant="outline" className={`${getRoleBadgeColor(usuario.rol)} whitespace-nowrap w-fit`}>
+          {getRoleDisplayName(usuario.rol)}
+        </Badge>
+      </TableCell>
+
+      {/* Estado */}
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {usuario.activo ? (
+            <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+              <UserCheck className="h-3 w-3 mr-1" />
+              Activo
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200">
+              <UserX className="h-3 w-3 mr-1" />
+              Inactivo
+            </Badge>
+          )}
         </div>
       </TableCell>
+
+      {/* Fecha de creación */}
+      <TableCell>
+        <div className="text-sm text-muted-foreground">
+          {formatDate(usuario.fecha_creacion)}
+        </div>
+      </TableCell>
+
+      {/* Acciones */}
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
-          <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 text-green-600">
-            <Check className="h-4 w-4" />
-          </span>
-          <UserActions 
-            userId={usuario.id}
-            userEmail={usuario.email}
-            isAdmin={true} 
-            onUserDeleted={async () => await onDeleteUser(usuario.id)}
-          />
+          {canEditUsers && onEditUser && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEditUser(usuario)}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+          {canDeleteUsers && onDeleteUser && (
+            <UserActions
+              userId={usuario.id}
+              userEmail={usuario.email}
+              isAdmin={true}
+              onUserDeleted={async () => await onDeleteUser(usuario.id)}
+            />
+          )}
         </div>
       </TableCell>
     </TableRow>

@@ -49,9 +49,14 @@ export const useInventarioProductosOptimized = (filters: any = {}) => {
   return useQuery({
     queryKey: inventarioOptimizedKeys.productosList(filters),
     queryFn: () => productoService.getAll(filters),
-    staleTime: 30 * 1000, // 30 segundos
-    gcTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 2 * 60 * 1000, // 2 minutos - datos dinámicos
+    gcTime: 15 * 60 * 1000,   // 15 minutos
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    // Prefetch relacionado
+    meta: {
+      prefetchRelated: ['bodegas', 'categorias'],
+    },
   });
 };
 

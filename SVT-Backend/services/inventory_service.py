@@ -66,6 +66,33 @@ def update_bodega(db: Session, bodega_id: int, bodega_update: BodegaUpdate):
     return db_bodega
 
 
+def delete_bodega(db: Session, bodega_id: int):
+    """Eliminar una bodega (soft delete)"""
+    db_bodega = get_bodega(db, bodega_id)
+    if not db_bodega:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Bodega con ID {bodega_id} no encontrada",
+        )
+
+    # Verificar si la bodega tiene stock
+    stock_count = db.query(models.StockBodega).filter(
+        models.StockBodega.bodega_id == bodega_id
+    ).count()
+
+    if stock_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No se puede eliminar la bodega {db_bodega.nombre} porque tiene {stock_count} productos en stock. Primero debe transferir o eliminar el stock.",
+        )
+
+    # Soft delete - marcar como inactiva
+    db_bodega.activa = False
+    db.commit()
+
+    return {"message": f"Bodega {db_bodega.nombre} eliminada exitosamente"}
+
+
 # ==================== FUNCIONES DE STOCK ====================
 
 

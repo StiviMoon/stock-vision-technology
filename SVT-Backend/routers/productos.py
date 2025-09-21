@@ -7,7 +7,7 @@ import schemas
 import database
 from services import producto_service
 from utils.security import get_current_user
-from utils.role_verification import verify_jefe_bodega_or_admin
+from utils.role_verification import verify_admin_or_usuario
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ router = APIRouter()
 def crear_producto(
     producto: schemas.ProductoCreate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """
     RF1.1: Permite al Jefe de Bodega registrar un nuevo producto con todos sus detalles.
@@ -43,7 +43,7 @@ def listar_productos(
     limit: int = 100,
     sku: Optional[str] = None,
     nombre: Optional[str] = None,
-    categoria: Optional[str] = None,
+    categoria_id: Optional[int] = None,
     proveedor_id: Optional[int] = None,
 ):
     productos = producto_service.get_productos(
@@ -52,7 +52,7 @@ def listar_productos(
         limit=limit,
         sku=sku,
         nombre=nombre,
-        categoria=categoria,
+        categoria_id=categoria_id,
         proveedor_id=proveedor_id,
     )
     return productos
@@ -78,7 +78,7 @@ def actualizar_producto(
     producto_id: int,
     producto: schemas.ProductoUpdate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """
     RF1.3: Permite al Jefe de Bodega actualizar la información de un producto.
@@ -98,7 +98,7 @@ def actualizar_producto(
 def eliminar_producto(
     producto_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """
     RF1.4: Permite al Jefe de Bodega eliminar un producto.

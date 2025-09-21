@@ -3,25 +3,61 @@
 // ---- INTERFACES PARA USUARIOS ----
 
 // Respuesta de usuario desde el backend
-export interface User {
+  export interface User {
     id: number;
     email: string;
     rol: string;
+    nombre?: string;
+    apellido?: string;
+    activo: boolean;
+    fecha_creacion: string;
+    fecha_actualizacion: string;
   }
-  
+
   // Datos para crear un usuario
   export interface UserCreate {
     email: string;
     password: string;
+    nombre?: string;
+    apellido?: string;
+    rol: 'ADMIN' | 'USUARIO' | 'INVITADO';
   }
-  
+
   // Datos para solicitar cambio de rol
   export interface RoleUpdateRequest {
     new_role: string;
   }
-  
+
+  // ---- INTERFACES PARA CATEGORÍAS ----
+
+  // Base para categorías (campos comunes)
+  export interface CategoriaBase {
+    nombre: string;
+    codigo: string;
+    descripcion?: string;
+    activa: boolean;
+  }
+
+  // Datos para crear una categoría (igual que la base en este caso)
+  export interface CategoriaCreate extends CategoriaBase {}
+
+  // Datos para actualizar una categoría (todos los campos son opcionales)
+  export interface CategoriaUpdate {
+    nombre?: string;
+    codigo?: string;
+    descripcion?: string;
+    activa?: boolean;
+  }
+
+  // Categoría completa incluyendo ID (respuesta del backend)
+  export interface Categoria extends CategoriaBase {
+    id: number;
+    fecha_creacion: string;
+    fecha_actualizacion: string;
+  }
+
   // ---- INTERFACES PARA PROVEEDORES ----
-  
+
   // Base para proveedores (campos comunes)
   export interface ProveedorBase {
     nombre: string;
@@ -31,10 +67,10 @@ export interface User {
     email?: string;
     direccion?: string;
   }
-  
+
   // Datos para crear un proveedor (igual que la base en este caso)
   export interface ProveedorCreate extends ProveedorBase {}
-  
+
   // Datos para actualizar un proveedor (todos los campos son opcionales)
   export interface ProveedorUpdate {
     nombre?: string;
@@ -44,14 +80,14 @@ export interface User {
     email?: string;
     direccion?: string;
   }
-  
+
   // Proveedor completo incluyendo ID (respuesta del backend)
   export interface Proveedor extends ProveedorBase {
     id: number;
   }
-  
+
   // ---- INTERFACES PARA PRODUCTOS ----
-  
+
   // Base para productos (campos comunes)
   export interface ProductoBase {
     sku: string;
@@ -62,12 +98,12 @@ export interface User {
     proveedor_id: number;
     stock_minimo: number;
   }
-  
+
   // Datos para crear un producto (base + stock inicial)
   export interface ProductoCreate extends ProductoBase {
     stock_inicial: number;
   }
-  
+
   // Datos para actualizar un producto (todos los campos son opcionales)
   export interface ProductoUpdate {
     nombre?: string;
@@ -78,7 +114,7 @@ export interface User {
     stock_actual?: number;
     stock_minimo?: number;
   }
-  
+
   // Producto completo incluyendo ID y campos adicionales (respuesta del backend)
   export interface Producto extends ProductoBase {
     id: number;
@@ -86,36 +122,36 @@ export interface User {
     fecha_creacion: string; // ISO string de datetime
     fecha_actualizacion: string; // ISO string de datetime
   }
-  
+
   // Producto detallado con información del proveedor
   export interface ProductoDetalle extends Producto {
     proveedor?: Proveedor;
   }
-  
+
   // ---- INTERFACES PARA AUTENTICACIÓN ----
-  
+
   // Respuesta de autenticación
   export interface AuthResponse {
     access_token: string;
     token_type: string;
     user?: User;
   }
-  
+
   // Credenciales de inicio de sesión
   export interface LoginCredentials {
     username: string;
     password: string;
   }
-  
+
   // Datos para registrar un nuevo usuario
   export interface RegisterData {
     email: string;
     password: string;
     nombre?: string; // Opcional, aunque no es parte del modelo de backend
   }
-  
+
   // ---- INTERFACES PARA MANEJO DE ERRORES ----
-  
+
   // Error de validación (respuesta 422)
   export interface ValidationError {
     detail: Array<{
@@ -124,13 +160,12 @@ export interface User {
       type: string;
     }>;
   }
-  
+
   // ---- INTERFACES PARA ORDENES Y VENTAS (SI SE REQUIEREN) ----
-  
-  // Estas interfaces pueden ser añadidas aquí si tu aplicación tiene funcionalidades de órdenes o ventas
-  
+
+
   // ---- OTRAS INTERFACES ESPECÍFICAS DE LA APLICACIÓN ----
-  
+
   // Ejemplo: Opciones para filtrado de productos
   export interface ProductoFilterOptions {
     categoria?: string;
@@ -138,14 +173,14 @@ export interface User {
     precio_max?: number;
     en_stock?: boolean;
   }
-  
+
   // Ejemplo: Estado de notificación
   export interface NotificationState {
     message: string;
     type: 'success' | 'error' | 'warning' | 'info';
     visible: boolean;
   }
-  
+
 // ---- INTERFACES PARA INVENTARIO ----
 
 // Enums para tipos y motivos de movimiento
@@ -179,7 +214,8 @@ export enum MotivoMovimiento {
 export interface BodegaBase {
   nombre: string;
   codigo: string;
-  direccion?: string;
+  ubicacion: string;
+  descripcion?: string;
   encargado?: string;
   telefono?: string;
   activa: boolean;
@@ -189,7 +225,8 @@ export interface BodegaCreate extends BodegaBase {}
 
 export interface BodegaUpdate {
   nombre?: string;
-  direccion?: string;
+  ubicacion?: string;
+  descripcion?: string;
   encargado?: string;
   telefono?: string;
   activa?: boolean;

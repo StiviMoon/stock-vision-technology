@@ -17,8 +17,8 @@ import { Badge } from '@/components/ui/badge';
 
 interface FiltersProps {
   onSearch: (query: string) => void;
-  onFilterChange: (filters: { rol?: string }) => void;
-  activeFilters: { rol?: string };
+  onFilterChange: (filters: { rol?: string; estado?: string }) => void;
+  activeFilters: { rol?: string; estado?: string };
 }
 
 export function UsersFilter({ onSearch, onFilterChange, activeFilters }: FiltersProps) {
@@ -42,6 +42,10 @@ export function UsersFilter({ onSearch, onFilterChange, activeFilters }: Filters
     onFilterChange({ ...activeFilters, rol: role });
   };
 
+  const handleEstadoFilter = (estado: string) => {
+    onFilterChange({ ...activeFilters, estado: estado });
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     onFilterChange({});
@@ -53,16 +57,16 @@ export function UsersFilter({ onSearch, onFilterChange, activeFilters }: Filters
     switch (rol.toUpperCase()) {
       case 'ADMIN':
         return 'Admin';
-      case 'USER':
+      case 'USUARIO':
         return 'Usuario';
-      case 'GUEST':
+      case 'INVITADO':
         return 'Invitado';
       default:
         return rol;
     }
   };
 
-  const hasActiveFilters = activeFilters.rol || searchQuery.length > 0;
+  const hasActiveFilters = activeFilters.rol || activeFilters.estado || searchQuery.length > 0;
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between mb-4">
@@ -95,7 +99,21 @@ export function UsersFilter({ onSearch, onFilterChange, activeFilters }: Filters
             </Button>
           </Badge>
         )}
-        
+
+        {activeFilters.estado && (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            Estado: {activeFilters.estado === 'activo' ? 'Activo' : 'Inactivo'}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-4 w-4 p-0"
+              onClick={() => onFilterChange({ ...activeFilters, estado: undefined })}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </Badge>
+        )}
+
         {hasActiveFilters && (
           <Button size="sm" variant="ghost" onClick={clearFilters}>
             Limpiar filtros
@@ -116,11 +134,22 @@ export function UsersFilter({ onSearch, onFilterChange, activeFilters }: Filters
               <DropdownMenuItem onSelect={() => handleRoleFilter('ADMIN')}>
                 Admin
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => handleRoleFilter('USER')}>
+              <DropdownMenuItem onSelect={() => handleRoleFilter('USUARIO')}>
                 Usuario
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => handleRoleFilter('GUEST')}>
+              <DropdownMenuItem onSelect={() => handleRoleFilter('INVITADO')}>
                 Invitado
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Filtrar por estado</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onSelect={() => handleEstadoFilter('activo')}>
+                Activo
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleEstadoFilter('inactivo')}>
+                Inactivo
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
