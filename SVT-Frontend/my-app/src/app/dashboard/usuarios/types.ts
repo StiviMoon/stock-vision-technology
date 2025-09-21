@@ -1,5 +1,4 @@
 // app/usuarios/types.ts
-// Archivo centralizado de tipos e interfaces
 
 // Interfaz para el usuario
 export interface Usuario {
@@ -7,31 +6,48 @@ export interface Usuario {
   email: string;
   rol: string;
   nombre?: string;
-  lastLogin?: string;
+  apellido?: string;
+  activo: boolean;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
 }
 
-// Tipo para roles
-export type Rol = 'ADMIN' | 'USER' | 'GUEST';
+// Datos para crear un usuario
+export interface UsuarioCreate {
+  email: string;
+  password: string;
+  nombre?: string;
+  apellido?: string;
+  rol: Rol;
+}
+
+export interface UsuarioUpdate {
+  email?: string;
+  nombre?: string;
+  apellido?: string;
+  rol?: Rol;
+  activo?: boolean;
+}
+
+export type Rol = 'ADMIN' | 'USUARIO' | 'INVITADO';
 
 // Interfaz para los filtros
 export interface Filtros {
   rol?: string;
   search?: string;
+  estado?: string;
 }
 
-// Props para UsersDashboard
 export interface UsersDashboardProps {
   // Si necesitas props específicas para el dashboard
 }
 
-// Props para UsersHeader
 export interface UsersHeaderProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   loading: boolean;
 }
 
-// Props para UsersStats
 export interface UsersStatsProps {
   stats: {
     total: number;
@@ -41,46 +57,54 @@ export interface UsersStatsProps {
   };
 }
 
-// Props para UsersFilter (basado en tu componente existente)
+// Props para UserForm
+export interface UserFormProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  formMode: 'create' | 'edit';
+  initialData: Usuario | null;
+  onSubmit: (data: UsuarioCreate | UsuarioUpdate) => Promise<{ success: boolean; validationErrors?: Record<string, string>; generalError?: string }>;
+}
+
 export interface UsersFilterProps {
   onSearch: (query: string) => void;
   onFilterChange: (filters: { rol?: string }) => void;
   activeFilters: { rol?: string, search?: string };
 }
 
-// Props para UsersTable
 export interface UsersTableProps {
   usuarios: Usuario[];
   allUsuarios: Usuario[];
   loading: boolean;
   searchQuery: string;
   filters: Filtros;
-  onRolChange: (userId: number, nuevoRol: string) => Promise<void>;
   onDeleteUser: (userId: number) => Promise<void>;
+  onEditUser: (user: Usuario) => void;
+  canEditUsers?: boolean;
+  canDeleteUsers?: boolean;
 }
 
 // Props para UserRow
 export interface UserRowProps {
   usuario: Usuario;
-  onRolChange: (userId: number, nuevoRol: string) => Promise<void>;
-  onDeleteUser: (userId: number) => Promise<void>;
+  onDeleteUser?: (userId: number) => Promise<void>;
+  onEditUser?: (user: Usuario) => void;
+  canEditUsers?: boolean;
+  canDeleteUsers?: boolean;
 }
 
-// Props para UserRoleSelector
 export interface UserRoleSelectorProps {
   currentRole: string;
   onRoleChange: (role: string) => void;
 }
 
-// Props para UserActions (cambiado para usar onUserDeleted en lugar de onDelete)
 export interface UserActionsProps {
   userId: number;
   userEmail: string;
   isAdmin: boolean;
-  onUserDeleted?: () => Promise<void>; // Cambiado de onDelete a onUserDeleted para mayor claridad
+  onUserDeleted?: () => Promise<void>;
 }
 
-// Funciones utilitarias relacionadas con roles que podrían usarse en múltiples componentes
 export const getRoleBadgeColor = (rol: string): string => {
   switch (rol.toUpperCase()) {
     case 'ADMIN':
@@ -98,9 +122,9 @@ export const getRoleDisplayName = (rol: string): string => {
   switch (rol.toUpperCase()) {
     case 'ADMIN':
       return 'Administrador';
-    case 'USER':
+    case 'USUARIO':
       return 'Usuario';
-    case 'GUEST':
+    case 'INVITADO':
       return 'Invitado';
     default:
       return rol;

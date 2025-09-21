@@ -16,13 +16,47 @@ from datetime import datetime, timezone
 import enum
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "ADMIN"
+    USUARIO = "USUARIO"
+    INVITADO = "INVITADO"
+
+
 class User(Base):
     __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    rol = Column(String, default="ADMIN")
+    rol = Column(Enum(UserRole), default=UserRole.ADMIN)
+    nombre = Column(String(100), nullable=True)
+    apellido = Column(String(100), nullable=True)
+    activo = Column(Boolean, default=True)
+    fecha_creacion = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    fecha_actualizacion = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class Categoria(Base):
+    __tablename__ = "categorias"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), unique=True, index=True)
+    codigo = Column(String(50), unique=True, index=True)
+    descripcion = Column(Text, nullable=True)
+    activa = Column(Boolean, default=True)
+    fecha_creacion = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    fecha_actualizacion = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # Relación con productos
+    productos = relationship("Producto", back_populates="categoria_rel")
 
 
 class Proveedor(Base):
@@ -46,7 +80,8 @@ class Producto(Base):
     sku = Column(String(50), unique=True, index=True)
     nombre = Column(String(100), index=True)
     descripcion = Column(Text)
-    categoria = Column(String(50), index=True)
+    categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=True)
+    categoria_nombre = Column(String(50), nullable=True, index=True)  # Mantener para compatibilidad
     precio_unitario = Column(Float)
     proveedor_id = Column(Integer, ForeignKey("proveedores.id"))
     stock_actual = Column(Integer, default=0)
@@ -59,6 +94,7 @@ class Producto(Base):
     )
 
     proveedor = relationship("Proveedor", back_populates="productos")
+    categoria_rel = relationship("Categoria", back_populates="productos")
     movimientos = relationship("MovimientoInventario", back_populates="producto")
     stocks_bodega = relationship("StockBodega", back_populates="producto")
 

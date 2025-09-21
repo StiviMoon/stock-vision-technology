@@ -26,7 +26,7 @@ export default function InventarioFilters({
   onReset,
   totalProductos
 }) {
-  const hasActiveFilters = searchTerm || selectedCategoria !== 'todas' || 
+  const hasActiveFilters = searchTerm || selectedCategoria !== 'todas' ||
                           selectedEstado !== 'todos' || selectedBodega !== 'todas';
 
   const activeFiltersCount = [
@@ -49,7 +49,7 @@ export default function InventarioFilters({
               </Badge>
             )}
           </div>
-          
+
           {/* Botón limpiar siempre visible pero disabled cuando no hay filtros */}
           <Button
             variant="outline"
@@ -78,7 +78,7 @@ export default function InventarioFilters({
               />
             </div>
           </div>
-          
+
           {/* Filtros en grid responsive */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -91,9 +91,9 @@ export default function InventarioFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas las categorías</SelectItem>
-                  {categorias.map(categoria => (
-                    <SelectItem key={categoria} value={categoria}>
-                      {categoria}
+                  {categorias.map((categoria, index) => (
+                    <SelectItem key={categoria.id || index} value={categoria.id ? categoria.id.toString() : categoria}>
+                      {categoria.nombre || categoria}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -162,12 +162,12 @@ export default function InventarioFilters({
                 {totalProductos} producto{totalProductos !== 1 ? 's' : ''} encontrado{totalProductos !== 1 ? 's' : ''}
               </Badge>
             </div>
-            
+
             {/* Filtros activos como tags */}
             {hasActiveFilters && (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">Filtros:</span>
-                
+
                 {searchTerm && (
                   <Badge variant="secondary" className="text-xs">
                     Búsqueda: "{searchTerm}"
@@ -179,10 +179,10 @@ export default function InventarioFilters({
                     </button>
                   </Badge>
                 )}
-                
+
                 {selectedCategoria !== 'todas' && (
                   <Badge variant="secondary" className="text-xs">
-                    {selectedCategoria}
+                    {categorias.find(c => c.id.toString() === selectedCategoria)?.nombre || 'Categoría'}
                     <button
                       onClick={() => setSelectedCategoria('todas')}
                       className="ml-1 hover:bg-muted rounded-full p-0.5"
@@ -191,10 +191,10 @@ export default function InventarioFilters({
                     </button>
                   </Badge>
                 )}
-                
+
                 {selectedEstado !== 'todos' && (
                   <Badge variant="secondary" className="text-xs">
-                    {selectedEstado === 'stock_bajo' ? 'Stock Bajo' : 
+                    {selectedEstado === 'stock_bajo' ? 'Stock Bajo' :
                      selectedEstado === 'sin_stock' ? 'Sin Stock' : 'Stock Normal'}
                     <button
                       onClick={() => setSelectedEstado('todos')}
@@ -204,7 +204,7 @@ export default function InventarioFilters({
                     </button>
                   </Badge>
                 )}
-                
+
                 {selectedBodega !== 'todas' && (
                   <Badge variant="secondary" className="text-xs">
                     {bodegas.find(b => b.id.toString() === selectedBodega)?.nombre || 'Bodega'}

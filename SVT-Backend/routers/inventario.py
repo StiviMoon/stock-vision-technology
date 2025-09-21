@@ -95,6 +95,21 @@ def update_bodega(
     return inventory_service.update_bodega(db, bodega_id, bodega_update)
 
 
+@router.delete("/bodegas/{bodega_id}")
+def delete_bodega(
+    bodega_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Eliminar una bodega (solo ADMIN)"""
+    if current_user.rol != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para eliminar bodegas",
+        )
+    return inventory_service.delete_bodega(db, bodega_id)
+
+
 # ==================== ENDPOINTS DE STOCK ====================
 
 

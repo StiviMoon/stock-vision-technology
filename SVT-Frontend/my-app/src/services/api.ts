@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
-// Importamos todas las interfaces
 import {
   User,
   UserCreate,
@@ -72,12 +71,12 @@ api.interceptors.response.use(
       localStorage.removeItem('token_type');
       window.location.href = '/login';
     }
-    
+
     // Formatear errores de validación
     if (error.response && error.response.status === 422) {
       console.error('Error de validación:', error.response.data.detail);
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -92,26 +91,26 @@ export const authService = {
     formData.append('username', email);
     formData.append('password', password);
     formData.append('grant_type', 'password');
-    
+
     try {
       const response = await axios.post<AuthResponse>(`${API_URL}/auth/login`, formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-      
+
       // Guardar token en localStorage
       if (typeof window !== 'undefined' && response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('token_type', response.data.token_type);
       }
-      
+
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  
+
   // Registro
   register: async (userData: RegisterData): Promise<User> => {
     try {
@@ -121,7 +120,7 @@ export const authService = {
       throw error;
     }
   },
-  
+
   // Obtener perfil de usuario
   getUserProfile: async (): Promise<User> => {
     try {
@@ -131,7 +130,7 @@ export const authService = {
       throw error;
     }
   },
-  
+
   // Cerrar sesión
   logout: (): void => {
     if (typeof window !== 'undefined') {
@@ -144,16 +143,22 @@ export const authService = {
 
 // Servicio de usuarios (para operaciones CRUD)
 export const userService = {
-  // Obtener todos los usuarios (solo para administradores)
-  getAllUsers: async (): Promise<User[]> => {
+  // Obtener todos los usuarios con filtros y paginación
+  getAllUsers: async (params?: {
+    skip?: number;
+    limit?: number;
+    active_only?: boolean;
+    search?: string;
+    role?: string;
+  }): Promise<User[]> => {
     try {
-      const response = await api.get<User[]>('/users/');
+      const response = await api.get<User[]>('/users/', { params });
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  
+
   // Obtener un usuario por ID
   getUserById: async (userId: number): Promise<User> => {
     try {
@@ -163,23 +168,75 @@ export const userService = {
       throw error;
     }
   },
-  
-  // Actualizar rol de usuario (solo para administradores)
+
+  createUser: async (userData: UserCreate): Promise<User> => {
+    try {
+      const response = await api.post<User>('/users/', userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Actualizar usuario completo
+  updateUser: async (userId: number, userData: Partial<UserCreate>): Promise<User> => {
+    try {
+      const response = await api.put<User>(`/users/${userId}`, userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   updateUserRole: async (userId: number, newRole: string): Promise<User> => {
     try {
-      const response = await api.put<User>(`/users/${userId}/role`, { 
-        new_role: newRole 
+      const response = await api.put<User>(`/users/${userId}/role`, {
+        new_role: newRole
       } as RoleUpdateRequest);
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  
-  // Eliminar usuario (solo para administradores)
+
+  // Activar usuario
+  activateUser: async (userId: number): Promise<void> => {
+    try {
+      await api.patch(`/users/${userId}/activate`);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Desactivar usuario (soft delete)
+  deactivateUser: async (userId: number): Promise<void> => {
+    try {
+      await api.patch(`/users/${userId}/deactivate`);
+    } catch (error) {
+      throw error;
+    }
+  },
+
   deleteUser: async (userId: number): Promise<void> => {
     try {
       await api.delete(`/users/${userId}`);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Obtener estadísticas de usuarios
+  getUserStats: async (): Promise<{
+    total_users: number;
+    active_users: number;
+    inactive_users: number;
+    admin_users: number;
+    regular_users: number;
+    guest_users: number;
+  }> => {
+    try {
+      const response = await api.get('/users/stats/overview');
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -197,7 +254,7 @@ export const productoService = {
       throw error;
     }
   },
-  
+
   // Obtener todos los productos con filtros opcionales
   getProductos: async (filtros: ProductoFilterOptions = {}): Promise<Producto[]> => {
     try {
@@ -207,7 +264,7 @@ export const productoService = {
       throw error;
     }
   },
-  
+
   // Obtener un producto por ID
   getProducto: async (productoId: number): Promise<ProductoDetalle> => {
     try {
@@ -217,19 +274,19 @@ export const productoService = {
       throw error;
     }
   },
-  
+
   // Obtener productos por categoría
   getProductosByCategoria: async (categoria: string): Promise<Producto[]> => {
     try {
-      const response = await api.get<Producto[]>('/productos/', { 
-        params: { categoria } 
+      const response = await api.get<Producto[]>('/productos/', {
+        params: { categoria }
       });
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  
+
   // Actualizar un producto existente
   updateProducto: async (productoId: number, productoData: ProductoUpdate): Promise<Producto> => {
     try {
@@ -239,7 +296,7 @@ export const productoService = {
       throw error;
     }
   },
-  
+
   // Eliminar un producto
   deleteProducto: async (productoId: number): Promise<void> => {
     try {
@@ -261,7 +318,7 @@ export const proveedorService = {
       throw error;
     }
   },
-  
+
   // Obtener todos los proveedores con búsqueda opcional
   getProveedores: async (params: Record<string, any> = {}): Promise<Proveedor[]> => {
     try {
@@ -271,19 +328,19 @@ export const proveedorService = {
       throw error;
     }
   },
-  
+
   // Buscar proveedores por nombre
   searchProveedoresByNombre: async (nombre: string): Promise<Proveedor[]> => {
     try {
-      const response = await api.get<Proveedor[]>('/proveedores/', { 
-        params: { nombre } 
+      const response = await api.get<Proveedor[]>('/proveedores/', {
+        params: { nombre }
       });
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  
+
   // Obtener un proveedor por ID
   getProveedor: async (proveedorId: number): Promise<Proveedor> => {
     try {
@@ -293,7 +350,7 @@ export const proveedorService = {
       throw error;
     }
   },
-  
+
   // Actualizar un proveedor existente
   updateProveedor: async (proveedorId: number, proveedorData: ProveedorUpdate): Promise<Proveedor> => {
     try {
@@ -303,7 +360,7 @@ export const proveedorService = {
       throw error;
     }
   },
-  
+
   // Eliminar un proveedor
   deleteProveedor: async (proveedorId: number): Promise<void> => {
     try {
@@ -314,18 +371,90 @@ export const proveedorService = {
   }
 };
 
+// Servicio de categorías
+export const categoriaService = {
+  // Crear una nueva categoría
+  createCategoria: async (categoriaData: any): Promise<any> => {
+    try {
+      const response = await api.post('/categorias/', categoriaData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Obtener todas las categorías
+  getCategorias: async (params: Record<string, any> = {}): Promise<any[]> => {
+    try {
+      const response = await api.get('/categorias/', { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Obtener categorías activas
+  getActivas: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/categorias/activas');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Obtener una categoría por ID
+  getCategoria: async (categoriaId: number): Promise<any> => {
+    try {
+      const response = await api.get(`/categorias/${categoriaId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Actualizar una categoría
+  updateCategoria: async (categoriaId: number, categoriaData: any): Promise<any> => {
+    try {
+      const response = await api.put(`/categorias/${categoriaId}`, categoriaData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Eliminar una categoría
+  deleteCategoria: async (categoriaId: number): Promise<void> => {
+    try {
+      await api.delete(`/categorias/${categoriaId}`);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Obtener estadísticas de categorías
+  getCategoriaStats: async (): Promise<any> => {
+    try {
+      const response = await api.get('/categorias/stats');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
 // Servicio de inventario
 export const inventarioService = {
   // ---- BODEGAS ----
-  
+
   // Obtener todas las bodegas
   getBodegas: async (soloActivas: boolean = true): Promise<Bodega[]> => {
     try {
       const response = await api.get<Bodega[]>('/inventario/bodegas', {
-        params: { 
+        params: {
           skip: 0,  // CAMBIAR de skip: 1 a skip: 0 para no saltar registros
           limit: 100,
-          solo_activas: soloActivas 
+          solo_activas: soloActivas
         }
       });
       return response.data;
@@ -334,7 +463,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Obtener una bodega por ID
   getBodega: async (bodegaId: number): Promise<Bodega> => {
     try {
@@ -344,7 +473,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Crear una nueva bodega
   createBodega: async (bodegaData: BodegaCreate): Promise<Bodega> => {
     try {
@@ -354,7 +483,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Actualizar una bodega
   updateBodega: async (bodegaId: number, bodegaData: BodegaUpdate): Promise<Bodega> => {
     try {
@@ -364,9 +493,18 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
+  // Eliminar una bodega
+  deleteBodega: async (bodegaId: number): Promise<void> => {
+    try {
+      await api.delete(`/inventario/bodegas/${bodegaId}`);
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // ---- STOCK ----
-  
+
   // Obtener stock consolidado de un producto
   getStockProducto: async (productoId: number): Promise<StockConsolidado> => {
     try {
@@ -376,7 +514,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Obtener stock de una bodega
   getStockBodega: async (bodegaId: number): Promise<StockBodega[]> => {
     try {
@@ -386,7 +524,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Obtener alertas de stock bajo
   getAlertasStock: async (): Promise<AlertaStock[]> => {
     try {
@@ -396,9 +534,9 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // ---- MOVIMIENTOS ----
-  
+
   // Crear movimiento genérico
   createMovimiento: async (movimientoData: MovimientoInventarioCreate): Promise<MovimientoInventario> => {
     try {
@@ -408,7 +546,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Ajustar inventario
   ajustarInventario: async (ajusteData: AjusteInventarioCreate): Promise<MovimientoInventario> => {
     try {
@@ -418,7 +556,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Transferir entre bodegas
   transferirEntreBodegas: async (transferenciaData: TransferenciaInventarioCreate): Promise<any> => {
     try {
@@ -428,7 +566,7 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // Realizar inventario físico
   realizarInventarioFisico: async (inventarioData: InventarioFisicoCreate): Promise<MovimientoInventario[]> => {
     try {
@@ -438,14 +576,14 @@ export const inventarioService = {
       throw error;
     }
   },
-  
+
   // ---- REPORTES ----
-  
+
   // Obtener kardex de un producto
   getKardex: async (
-    productoId: number, 
-    fechaInicio?: string, 
-    fechaFin?: string, 
+    productoId: number,
+    fechaInicio?: string,
+    fechaFin?: string,
     bodegaId?: number
   ): Promise<KardexResponse> => {
     try {
@@ -453,14 +591,14 @@ export const inventarioService = {
       if (fechaInicio) params.fecha_inicio = fechaInicio;
       if (fechaFin) params.fecha_fin = fechaFin;
       if (bodegaId) params.bodega_id = bodegaId;
-      
+
       const response = await api.get<KardexResponse>(`/inventario/kardex/${productoId}`, { params });
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  
+
   // Obtener movimientos con filtros
   getMovimientos: async (
     filtros: {
@@ -474,8 +612,8 @@ export const inventarioService = {
     } = {}
   ): Promise<MovimientoInventario[]> => {
     try {
-      const response = await api.get<MovimientoInventario[]>('/inventario/movimientos', { 
-        params: filtros 
+      const response = await api.get<MovimientoInventario[]>('/inventario/movimientos', {
+        params: filtros
       });
       return response.data;
     } catch (error) {
@@ -486,18 +624,18 @@ export const inventarioService = {
 
 
 // Exportar la instancia de API y los tipos para uso en la aplicación
-export type { 
-  User, 
+export type {
+  User,
   UserCreate,
   RegisterData,
   RoleUpdateRequest,
   ProveedorBase,
-  Proveedor, 
-  ProveedorCreate, 
+  Proveedor,
+  ProveedorCreate,
   ProveedorUpdate,
   ProductoBase,
-  Producto, 
-  ProductoCreate, 
+  Producto,
+  ProductoCreate,
   ProductoUpdate,
   ProductoDetalle,
   AuthResponse,

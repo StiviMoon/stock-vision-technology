@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import {
   Card,
@@ -30,7 +30,7 @@ import ProductoRow from './ProductoRow';
 export default function ProductoTable({ productos, onEdit, onDelete }) {
   // Estado para los productos filtrados
   const [filteredProductos, setFilteredProductos] = useState(productos);
-  
+
   // Estado para los filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all'); // Cambiado de '' a 'all'
@@ -38,40 +38,40 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
   const [activeFilters, setActiveFilters] = useState([]);
   const [pagina, setPagina] = useState(1);
   const productosPorPagina = 10;
-  
+
   // Opciones de categorías disponibles (generadas dinámicamente)
-  const availableCategories = [...new Set(productos.map(p => p.categoria))].filter(Boolean);
-  
+  const availableCategories = [...new Set(productos.map(p => p.categoria_nombre))].filter(Boolean);
+
   // Opciones para filtro de stock
   const stockOptions = [
     { value: 'low', label: 'Stock Bajo' },
     { value: 'available', label: 'Disponible' },
     { value: 'out', label: 'Agotado' }
   ];
-  
+
   // Actualizar productos filtrados cuando cambian los filtros o los productos
   useEffect(() => {
     let result = [...productos];
-    
+
     // Filtrar por término de búsqueda
     if (searchTerm) {
-      result = result.filter(producto => 
+      result = result.filter(producto =>
         producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         producto.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (producto.descripcion && producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
-    
+
     // Filtrar por categoría
     if (categoryFilter && categoryFilter !== 'all') {
-      result = result.filter(producto => producto.categoria === categoryFilter);
+      result = result.filter(producto => producto.categoria_nombre === categoryFilter);
     }
-    
+
     // Filtrar por estado de stock
     if (stockFilter && stockFilter !== 'all') {
       switch (stockFilter) {
         case 'low':
-          result = result.filter(producto => 
+          result = result.filter(producto =>
             producto.stock_actual > 0 && producto.stock_actual <= producto.stock_minimo
           );
           break;
@@ -85,9 +85,9 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
           break;
       }
     }
-    
+
     setFilteredProductos(result);
-    
+
     // Actualizar filtros activos para mostrar badges
     const newActiveFilters = [];
     if (searchTerm) {
@@ -102,26 +102,26 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
     }
     setActiveFilters(newActiveFilters);
   }, [productos, searchTerm, categoryFilter, stockFilter]);
-  
+
   // Reiniciar página cuando cambian los filtros o productos
   useEffect(() => {
     setPagina(1);
   }, [searchTerm, categoryFilter, stockFilter, productos]);
-  
+
   // Calcular productos a mostrar en la página actual
   const totalPaginas = Math.ceil(filteredProductos.length / productosPorPagina);
   const productosPagina = filteredProductos.slice(
     (pagina - 1) * productosPorPagina,
     pagina * productosPorPagina
   );
-  
+
   // Limpiar todos los filtros
   const clearAllFilters = () => {
     setSearchTerm('');
     setCategoryFilter('all');
     setStockFilter('all');
   };
-  
+
   // Eliminar un filtro específico
   const removeFilter = (filterType) => {
     switch (filterType) {
@@ -138,7 +138,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
         break;
     }
   };
-  
+
   return (
     <Card>
       <CardHeader className="pb-1">
@@ -149,7 +149,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
           </span>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent>
         {/* Controles de búsqueda y filtros */}
         <div className="mb-6 space-y-4">
@@ -164,7 +164,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                 className="pl-8 w-full"
               />
             </div>
-            
+
             {/* Filtro de categoría */}
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full sm:w-[180px] ">
@@ -179,7 +179,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                 ))}
               </SelectContent>
             </Select>
-            
+
             {/* Filtro de stock */}
             <Select value={stockFilter} onValueChange={setStockFilter}>
               <SelectTrigger className="w-full sm:w-[180px]">
@@ -195,7 +195,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Badges de filtros activos */}
           {activeFilters.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
@@ -203,14 +203,14 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                 <Filter className="mr-1 h-4 w-4" />
                 <span>Filtros:</span>
               </div>
-              
+
               {activeFilters.map((filter, index) => (
                 <Badge key={index} variant="secondary" className="flex items-center gap-1">
                   {filter.type === 'search' && 'Búsqueda:'}
                   {filter.type === 'category' && 'Categoría:'}
                   {filter.type === 'stock' && 'Stock:'}
                   {filter.value}
-                  <button 
+                  <button
                     onClick={() => removeFilter(filter.type)}
                     className="ml-1 rounded-full cursor-pointer p-0.5 hover:bg-destructive"
                   >
@@ -218,10 +218,10 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                   </button>
                 </Badge>
               ))}
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
+
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={clearAllFilters}
                 className="text-muted-foreground text-xs h-7 px-2 cursor-pointer"
               >
@@ -230,7 +230,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
             </div>
           )}
         </div>
-        
+
         {/* Tabla de Productos */}
         <div className="rounded-md border">
           <Table>
@@ -248,18 +248,18 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
               {productosPagina.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                    {productos.length === 0 
-                      ? "No hay productos disponibles" 
+                    {productos.length === 0
+                      ? "No hay productos disponibles"
                       : "No se encontraron productos con los filtros aplicados"}
                   </TableCell>
                 </TableRow>
               ) : (
                 productosPagina.map((producto) => (
-                  <ProductoRow 
-                    key={producto.id} 
-                    producto={producto} 
-                    onEdit={onEdit} 
-                    onDelete={onDelete} 
+                  <ProductoRow
+                    key={producto.id}
+                    producto={producto}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                   />
                 ))
               )}

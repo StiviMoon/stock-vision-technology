@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, noload
 from fastapi import HTTPException, status
 import models
 from schemas import ProductoCreate, ProductoUpdate
@@ -9,7 +9,10 @@ def get_producto(db: Session, producto_id: int):
     return (
         db.query(models.Producto)
         .filter(models.Producto.id == producto_id)
-        .options(joinedload(models.Producto.proveedor))
+        .options(
+            joinedload(models.Producto.proveedor),
+            noload(models.Producto.categoria_rel),  # Evitar cargar la relación problemática
+        )
         .first()
     )
 
@@ -25,13 +28,14 @@ def get_productos(
     limit: int = 100,
     sku: str = None,
     nombre: str = None,
-    categoria: str = None,
+    categoria_id: int = None,
     proveedor_id: int = None,
 ):
     """Obtener productos con filtros opcionales"""
     query = db.query(models.Producto).options(
         joinedload(models.Producto.proveedor),
         joinedload(models.Producto.stocks_bodega).joinedload(models.StockBodega.bodega),
+        noload(models.Producto.categoria_rel),  # Evitar cargar la relación problemática
     )
 
     # Aplicar filtros si se proporcionan
@@ -39,8 +43,8 @@ def get_productos(
         query = query.filter(models.Producto.sku.ilike(f"%{sku}%"))
     if nombre:
         query = query.filter(models.Producto.nombre.ilike(f"%{nombre}%"))
-    if categoria:
-        query = query.filter(models.Producto.categoria.ilike(f"%{categoria}%"))
+    if categoria_id:
+        query = query.filter(models.Producto.categoria_id == categoria_id)
     if proveedor_id:
         query = query.filter(models.Producto.proveedor_id == proveedor_id)
 
@@ -62,12 +66,25 @@ def create_producto(db: Session, producto: ProductoCreate):
             detail=f"Proveedor con ID {producto.proveedor_id} no encontrado",
         )
 
+    # Validar categoría
+    categoria = (
+        db.query(models.Categoria)
+        .filter(models.Categoria.id == producto.categoria_id)
+        .first()
+    )
+    if not categoria:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Categoría con ID {producto.categoria_id} no encontrada",
+        )
+
     # Crear producto
     db_producto = models.Producto(
         sku=producto.sku,
         nombre=producto.nombre,
         descripcion=producto.descripcion,
-        categoria=producto.categoria,
+        categoria_id=producto.categoria_id,
+        categoria_nombre=categoria.nombre,  # Mantener para compatibilidad
         precio_unitario=producto.precio_unitario,
         proveedor_id=producto.proveedor_id,
         stock_minimo=producto.stock_minimo,

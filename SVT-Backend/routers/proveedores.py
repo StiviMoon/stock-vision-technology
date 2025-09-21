@@ -7,7 +7,7 @@ import schemas
 import database
 from services import proveedor_service
 from utils.security import get_current_user
-from utils.role_verification import verify_jefe_bodega_or_admin
+from utils.role_verification import verify_admin_or_usuario
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ router = APIRouter()
 def crear_proveedor(
     proveedor: schemas.ProveedorCreate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """Permite al Jefe de Bodega registrar un nuevo proveedor"""
     # Verificar si ya existe un proveedor con el mismo código
@@ -52,7 +52,7 @@ def listar_proveedores(
 def obtener_proveedor(
     proveedor_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """Permite al Jefe de Bodega consultar la información de un proveedor específico"""
     db_proveedor = proveedor_service.get_proveedor(db, proveedor_id=proveedor_id)
@@ -73,7 +73,7 @@ def editar_proveedor(
     proveedor_id: int,
     proveedor: schemas.ProveedorCreate,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """Permite al Jefe de Bodega editar la información de un proveedor"""
     db_proveedor = proveedor_service.update_proveedor(
@@ -91,7 +91,7 @@ def editar_proveedor(
 def eliminar_provedor(
     proveedor_id: int,
     db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(verify_jefe_bodega_or_admin),
+    current_user: models.User = Depends(verify_admin_or_usuario),
 ):
     """Permite al Jefe de Bodega eliminar un proveedor"""
     db_proveedor = proveedor_service.delete_proveedor(db, proveedor_id=proveedor_id)

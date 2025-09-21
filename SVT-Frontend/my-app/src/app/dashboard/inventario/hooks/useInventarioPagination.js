@@ -1,4 +1,3 @@
-// hooks/useInventarioPagination.js
 import { useState, useEffect, useMemo } from 'react';
 
 export function useInventarioPagination(items, itemsPorPagina = 10) {

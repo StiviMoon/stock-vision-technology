@@ -22,7 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import ErrorAlert from './ErrorAlert';
 import { SKUGenerator } from './SKUGenerator';
-import { proveedorService, inventarioService } from '@/src/services/api';
+import { proveedorService, inventarioService, categoriaService } from '@/src/services/api';
 import { useRouter } from 'next/navigation';
 import {
   Tooltip,
@@ -49,10 +49,7 @@ export default function ProductoForm({
     sku: '',
     nombre: '',
     descripcion: '',
-    categoria: '',
-    subcategoria: '',
-    color: '',
-    tamaño: '',
+    categoria_id: '',
     precio_unitario: 0,
     proveedor_id: '',
     stock_minimo: 0,
@@ -71,16 +68,15 @@ export default function ProductoForm({
   const [bodegas, setBodegas] = useState([]);
   const [loadingBodegas, setLoadingBodegas] = useState(false);
 
+  // Estado para categorías
+  const [categorias, setCategorias] = useState([]);
+  const [loadingCategorias, setLoadingCategorias] = useState(false);
+  const [categoriaError, setCategoriaError] = useState(null);
+
   // Estado para errores de validación y errores generales
   const [formErrors, setFormErrors] = useState({});
   const [error, setError] = useState(null);
   const [skuManual, setSkuManual] = useState(false);
-
-  // Categorías disponibles
-  const categorias = Object.keys(SKUGenerator.CATEGORY_PREFIXES).map(cat => ({
-    value: cat,
-    label: cat.charAt(0) + cat.slice(1).toLowerCase(),
-  }));
 
   // Función helper para manejar valores de Select
   const getSelectValue = value => {
@@ -88,7 +84,7 @@ export default function ProductoForm({
     return typeof value === 'string' ? value : value.toString();
   };
 
-  // Cargar proveedores y bodegas al montar el componente
+  // Cargar proveedores, bodegas y categorías al montar el componente
   useEffect(() => {
     const fetchData = async () => {
       // Cargar proveedores
@@ -121,6 +117,20 @@ export default function ProductoForm({
       } finally {
         setLoadingBodegas(false);
       }
+
+      // Cargar categorías
+      setLoadingCategorias(true);
+      setCategoriaError(null);
+      try {
+        const categoriasData = await categoriaService.getActivas();
+        console.log('Categorías cargadas:', categoriasData); // DEBUG
+        setCategorias(categoriasData);
+      } catch (error) {
+        console.error('Error al cargar categorías:', error);
+        setCategoriaError('No se pudieron cargar las categorías');
+      } finally {
+        setLoadingCategorias(false);
+      }
     };
 
     if (isOpen) {
@@ -128,9 +138,10 @@ export default function ProductoForm({
     }
   }, [isOpen]);
 
-  // Actualizar el formulario cuando cambia el modo, los datos iniciales o se cargan proveedores/bodegas
+  // Actualizar el formulario cuando cambia el modo, los datos iniciales o se cargan proveedores/bodegas/categorías
   useEffect(() => {
     console.log('useEffect - bodegas disponibles:', bodegas); // DEBUG
+    console.log('useEffect - categorías disponibles:', categorias); // DEBUG
 
     if (formMode === 'create' && bodegas.length > 0 && !formData.bodega_id) {
       // Si estamos en modo crear y hay bodegas pero no hay bodega seleccionada
@@ -146,10 +157,7 @@ export default function ProductoForm({
         sku: '',
         nombre: '',
         descripcion: '',
-        categoria: '',
-        subcategoria: '',
-        color: '',
-        tamaño: '',
+        categoria_id: categorias.length > 0 ? categorias[0].id.toString() : '',
         precio_unitario: 0,
         proveedor_id:
           proveedores.length > 0 ? proveedores[0].id.toString() : '',
@@ -165,10 +173,9 @@ export default function ProductoForm({
         sku: initialData.sku || '',
         nombre: initialData.nombre || '',
         descripcion: initialData.descripcion || '',
-        categoria: initialData.categoria || '',
-        subcategoria: initialData.subcategoria || '',
-        color: initialData.color || '',
-        tamaño: initialData.tamaño || '',
+        categoria_id: initialData.categoria_id
+          ? initialData.categoria_id.toString()
+          : categorias.length > 0 ? categorias[0].id.toString() : '',
         precio_unitario:
           typeof initialData.precio_unitario === 'number'
             ? initialData.precio_unitario
@@ -194,7 +201,7 @@ export default function ProductoForm({
     }
     setFormErrors({});
     setError(null);
-  }, [formMode, initialData, isOpen, proveedores, bodegas]);
+  }, [formMode, initialData, isOpen, proveedores, bodegas, categorias]);
 
   // Generar SKU automáticamente cuando se modifican los campos relevantes
   useEffect(() => {
@@ -202,10 +209,15 @@ export default function ProductoForm({
       !skuManual &&
       formMode === 'create' &&
       formData.nombre &&
-      formData.categoria
+      formData.categoria_id
     ) {
+      // Obtener el nombre de la categoría seleccionada
+      const categoriaSeleccionada = categorias.find(cat => cat.id.toString() === formData.categoria_id);
+      const nombreCategoria = categoriaSeleccionada ? categoriaSeleccionada.nombre : 'OTROS';
+
       const tempProduct = {
         ...formData,
+        categoria: nombreCategoria, // Usar el nombre real de la categoría
         id: Date.now() % 1000000,
       };
 
@@ -223,6 +235,7 @@ export default function ProductoForm({
     formData.tamaño,
     skuManual,
     formMode,
+    categorias,
   ]);
 
   const handleInputChange = e => {
@@ -277,8 +290,13 @@ export default function ProductoForm({
     setSkuManual(!skuManual);
 
     if (skuManual && formData.nombre && formData.categoria) {
+      // Obtener el nombre de la categoría seleccionada
+      const categoriaSeleccionada = categorias.find(cat => cat.id.toString() === formData.categoria);
+      const nombreCategoria = categoriaSeleccionada ? categoriaSeleccionada.nombre : 'OTROS';
+
       const tempProduct = {
         ...formData,
+        categoria: nombreCategoria, // Usar el nombre real de la categoría
         id: Date.now() % 1000000,
       };
 
@@ -294,6 +312,16 @@ export default function ProductoForm({
     e.preventDefault();
 
     // Validaciones
+    if (!formData.categoria_id) {
+      const errorMessage = 'Debes seleccionar una categoría';
+      setFormErrors({
+        ...formErrors,
+        categoria_id: errorMessage,
+      });
+      toasts.showValidationError('Categoría', errorMessage);
+      return;
+    }
+
     if (!formData.proveedor_id) {
       const errorMessage = 'Debes seleccionar un proveedor';
       setFormErrors({
@@ -314,13 +342,17 @@ export default function ProductoForm({
       return;
     }
 
+    // Limpiar formData para enviar solo los campos necesarios
+    const { categoria, ...cleanFormData } = formData; // Remover categoria del formData
+
     const productoData = {
-      ...formData,
+      ...cleanFormData,
       precio_unitario: parseFloat(formData.precio_unitario) || 0,
       proveedor_id: parseInt(formData.proveedor_id) || 0,
       bodega_id: parseInt(formData.bodega_id) || 0,
       stock_minimo: parseInt(formData.stock_minimo) || 0,
       stock_inicial: parseInt(formData.stock_inicial) || 0,
+      categoria_id: parseInt(formData.categoria_id) || 0,
     };
 
     const result = await onSubmit(productoData);
@@ -335,76 +367,6 @@ export default function ProductoForm({
     }
   };
 
-  const getSubcategorias = () => {
-    if (!formData.categoria) return [];
-
-    const subCategories = {};
-    Object.keys(SKUGenerator.SUBCATEGORY_CODES).forEach(subcat => {
-      if (
-        formData.categoria === 'ELECTRONICA' &&
-        [
-          'CELULARES',
-          'COMPUTADORAS',
-          'TABLETS',
-          'AUDIO',
-          'TELEVISORES',
-        ].includes(subcat)
-      ) {
-        subCategories[subcat] =
-          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
-      } else if (
-        formData.categoria === 'ROPA' &&
-        [
-          'CAMISETAS',
-          'PANTALONES',
-          'VESTIDOS',
-          'ABRIGOS',
-          'ROPA_INTERIOR',
-        ].includes(subcat)
-      ) {
-        subCategories[subcat] =
-          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
-      } else if (
-        formData.categoria === 'CALZADO' &&
-        ['ZAPATOS', 'DEPORTIVOS', 'BOTAS', 'SANDALIAS'].includes(subcat)
-      ) {
-        subCategories[subcat] =
-          subcat.charAt(0) + subcat.slice(1).toLowerCase().replace('_', ' ');
-      }
-    });
-
-    return Object.entries(subCategories).map(([value, label]) => ({
-      value,
-      label,
-    }));
-  };
-
-  const colores = Object.keys(SKUGenerator.ATTRIBUTE_CODES)
-    .filter(attr =>
-      [
-        'BLANCO',
-        'NEGRO',
-        'ROJO',
-        'AZUL',
-        'VERDE',
-        'AMARILLO',
-        'GRIS',
-        'MARRON',
-        'ROSA',
-        'MORADO',
-      ].includes(attr)
-    )
-    .map(color => ({
-      value: color,
-      label: color.charAt(0) + color.slice(1).toLowerCase(),
-    }));
-
-  const tamaños = ['PEQUENO', 'MEDIANO', 'GRANDE', 'EXTRA_GRANDE'].map(
-    tamaño => ({
-      value: tamaño,
-      label: tamaño.charAt(0) + tamaño.slice(1).toLowerCase().replace('_', ' '),
-    })
-  );
 
   // Si no hay proveedores disponibles, mostrar alerta
   if (noProveedoresDisponibles && !loadingProveedores) {
@@ -538,30 +500,48 @@ export default function ProductoForm({
               <div className='space-y-4'>
                 <div className='grid gap-2'>
                   <Label
-                    htmlFor='categoria'
-                    className={formErrors.categoria ? 'text-destructive' : ''}
+                    htmlFor='categoria_id'
+                    className={formErrors.categoria_id ? 'text-destructive' : ''}
                   >
-                    Categoría
+                    Categoría <span className='text-destructive'>*</span>
                   </Label>
                   <Select
-                    value={formData.categoria}
+                    value={formData.categoria_id}
                     onValueChange={value =>
-                      handleSelectChange('categoria', value)
+                      handleSelectChange('categoria_id', value)
                     }
+                    disabled={loadingCategorias}
                   >
                     <SelectTrigger
                       className={
-                        formErrors.categoria ? 'border-destructive' : ''
+                        formErrors.categoria_id ? 'border-destructive' : ''
                       }
                     >
                       <SelectValue placeholder='Seleccionar categoría' />
                     </SelectTrigger>
                     <SelectContent>
-                      {categorias.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
+                      {loadingCategorias ? (
+                        <SelectItem value='loading' disabled>
+                          <div className='flex items-center'>
+                            <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                            Cargando categorías...
+                          </div>
                         </SelectItem>
-                      ))}
+                      ) : categoriaError ? (
+                        <SelectItem value='error' disabled>
+                          Error al cargar categorías
+                        </SelectItem>
+                      ) : categorias.length > 0 ? (
+                        categorias.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id.toString()}>
+                            {cat.nombre} {cat.codigo ? `(${cat.codigo})` : ''}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value='no-categorias' disabled>
+                          No hay categorías disponibles
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   {formErrors.categoria && (
@@ -569,45 +549,11 @@ export default function ProductoForm({
                       {formErrors.categoria}
                     </p>
                   )}
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label
-                    htmlFor='subcategoria'
-                    className={
-                      formErrors.subcategoria ? 'text-destructive' : ''
-                    }
-                  >
-                    Subcategoría
-                  </Label>
-                  <Select
-                    value={formData.subcategoria}
-                    onValueChange={value =>
-                      handleSelectChange('subcategoria', value)
-                    }
-                    disabled={!formData.categoria}
-                  >
-                    <SelectTrigger
-                      className={
-                        formErrors.subcategoria ? 'border-destructive' : ''
-                      }
-                    >
-                      <SelectValue placeholder='Seleccionar subcategoría' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getSubcategorias().map(subcat => (
-                        <SelectItem key={subcat.value} value={subcat.value}>
-                          {subcat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.subcategoria && (
-                    <p className='text-sm text-destructive'>
-                      {formErrors.subcategoria}
-                    </p>
+                  {categoriaError && (
+                    <p className='text-xs text-destructive'>{categoriaError}</p>
                   )}
                 </div>
+
 
                 <div className='grid gap-2'>
                   <Label
@@ -724,70 +670,8 @@ export default function ProductoForm({
                 </div>
               </div>
 
-              {/* Columna 3: Atributos y Stock */}
+              {/* Columna 3: Stock */}
               <div className='space-y-4'>
-                <div className='grid gap-2'>
-                  <Label
-                    htmlFor='color'
-                    className={formErrors.color ? 'text-destructive' : ''}
-                  >
-                    Color
-                  </Label>
-                  <Select
-                    value={formData.color}
-                    onValueChange={value => handleSelectChange('color', value)}
-                  >
-                    <SelectTrigger
-                      className={formErrors.color ? 'border-destructive' : ''}
-                    >
-                      <SelectValue placeholder='Seleccionar color' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colores.map(color => (
-                        <SelectItem key={color.value} value={color.value}>
-                          {color.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.color && (
-                    <p className='text-sm text-destructive'>
-                      {formErrors.color}
-                    </p>
-                  )}
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label
-                    htmlFor='tamaño'
-                    className={formErrors.tamaño ? 'text-destructive' : ''}
-                  >
-                    Tamaño
-                  </Label>
-                  <Select
-                    value={formData.tamaño}
-                    onValueChange={value => handleSelectChange('tamaño', value)}
-                  >
-                    <SelectTrigger
-                      className={formErrors.tamaño ? 'border-destructive' : ''}
-                    >
-                      <SelectValue placeholder='Seleccionar tamaño' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tamaños.map(tamaño => (
-                        <SelectItem key={tamaño.value} value={tamaño.value}>
-                          {tamaño.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.tamaño && (
-                    <p className='text-sm text-destructive'>
-                      {formErrors.tamaño}
-                    </p>
-                  )}
-                </div>
-
                 <div className='grid grid-cols-2 gap-4'>
                   <FormField
                     id='stock_minimo'

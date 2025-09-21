@@ -1,11 +1,11 @@
 'use client';
 
-import { 
-  Table, 
-  TableBody, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Loader2 } from 'lucide-react';
 import { UserRow } from './UserRow';
@@ -17,15 +17,19 @@ interface UsersTableProps {
   loading: boolean;
   searchQuery?: string;
   filters?: Record<string, any>;
-  onRolChange: (userId: number, nuevoRol: string) => Promise<void>;
-  onDeleteUser: (userId: number) => Promise<void>;
+  onDeleteUser?: (userId: number) => Promise<void>;
+  onEditUser?: (user: Usuario) => void;
+  canEditUsers?: boolean;
+  canDeleteUsers?: boolean;
 }
 
-export function UsersTable({ 
-  usuarios, 
-  loading, 
-  onRolChange,
-  onDeleteUser 
+export function UsersTable({
+  usuarios,
+  loading,
+  onDeleteUser,
+  onEditUser,
+  canEditUsers = false,
+  canDeleteUsers = false
 }: UsersTableProps) {
 
   if (loading) {
@@ -49,18 +53,23 @@ export function UsersTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[40%]">Usuario</TableHead>
-            <TableHead className="w-[40%]">Rol</TableHead>
-            <TableHead className="text-right w-[20%]">Acciones</TableHead>
+            <TableHead className="w-[25%]">Usuario</TableHead>
+            <TableHead className="w-[20%]">Nombre</TableHead>
+            <TableHead className="w-[15%]">Rol</TableHead>
+            <TableHead className="w-[15%]">Estado</TableHead>
+            <TableHead className="w-[15%]">Fecha Creación</TableHead>
+            <TableHead className="text-right w-[10%]">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {usuarios.map((usuario) => (
-            <UserRow 
+            <UserRow
               key={usuario.id}
               usuario={usuario}
-              onRolChange={onRolChange}
               onDeleteUser={onDeleteUser}
+              onEditUser={onEditUser}
+              canEditUsers={canEditUsers}
+              canDeleteUsers={canDeleteUsers}
             />
           ))}
         </TableBody>

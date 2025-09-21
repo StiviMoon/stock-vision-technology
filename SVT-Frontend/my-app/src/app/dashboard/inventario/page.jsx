@@ -25,7 +25,6 @@ import { useInventarioFilters } from './hooks/useInventarioFilters';
 import { useInventarioPagination } from './hooks/useInventarioPagination';
 
 export default function InventarioPage() {
-  // Estado para animaciones de entrada
   const [isVisible, setIsVisible] = useState(false);
 
   // Estados de modales
@@ -76,7 +75,7 @@ export default function InventarioPage() {
       // Filtro de categoría
       const matchCategoria =
         selectedCategoria === 'todas' ||
-        producto.categoria === selectedCategoria;
+        producto.categoria_id.toString() === selectedCategoria;
 
       // Filtro de bodega (corregido)
       const matchBodega =
@@ -115,7 +114,20 @@ export default function InventarioPage() {
 
   // Categorías únicas (memoizado)
   const categorias = useMemo(() => {
-    return [...new Set(productos.map(p => p.categoria))];
+    const categoriasUnicas = [];
+    const categoriasVistas = new Set();
+
+    productos.forEach(p => {
+      if (p.categoria_id && p.categoria_nombre && !categoriasVistas.has(p.categoria_id)) {
+        categoriasUnicas.push({
+          id: p.categoria_id,
+          nombre: p.categoria_nombre
+        });
+        categoriasVistas.add(p.categoria_id);
+      }
+    });
+
+    return categoriasUnicas;
   }, [productos]);
 
   // Estados de loading
@@ -123,7 +135,8 @@ export default function InventarioPage() {
 
   // Activar animaciones de entrada
   useEffect(() => {
-    setIsVisible(true);
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Funciones para manejar modales
@@ -200,44 +213,47 @@ export default function InventarioPage() {
   }
 
   return (
-    <div className='p-6 md:p-6 space-y-6 flex flex-col'>
-      {/* Header con animación */}
-      <div
-        className={`mb-8 flex justify-between items-start transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
-        style={{ transitionDelay: '200ms' }}
-      >
-        <div>
-          <h1
-            className={`text-3xl font-bold mb-2 transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-            style={{ transitionDelay: '300ms' }}
-          >
-            Inventario
-          </h1>
-          <p
-            className={`text-muted-foreground transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
-            style={{ transitionDelay: '400ms' }}
-          >
-            Gestiona el stock de productos y movimientos de inventario
-          </p>
-        </div>
-        <Button
-          variant='outline'
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-          style={{ transitionDelay: '500ms' }}
+    <div className="p-6 md:p-8">
+      <div className="space-y-6">
+        {/* Header con animación */}
+        <div
+          className={`transform transition-all duration-300 ease-out ${
+            isVisible
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-4'
+          }`}
+          style={{ transitionDelay: '100ms' }}
         >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
-          />
-          Actualizar
-        </Button>
-      </div>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                Inventario
+              </h1>
+              <p className="text-muted-foreground">
+                Gestiona el stock de productos y movimientos de inventario
+              </p>
+            </div>
+            <Button
+              variant='outline'
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+              />
+              Actualizar
+            </Button>
+          </div>
+        </div>
 
       {/* Estadísticas con animación */}
       <div
-        className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        style={{ transitionDelay: '600ms' }}
+        className={`transform transition-all duration-300 ease-out ${
+          isVisible
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-4'
+        }`}
+        style={{ transitionDelay: '200ms' }}
       >
         <InventarioStats
           productos={productos}
@@ -248,8 +264,12 @@ export default function InventarioPage() {
 
       {/* Filtros con animación */}
       <div
-        className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        style={{ transitionDelay: '700ms' }}
+        className={`transform transition-all duration-300 ease-out ${
+          isVisible
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-4'
+        }`}
+        style={{ transitionDelay: '300ms' }}
       >
         <InventarioFilters
           searchTerm={searchTerm}
@@ -269,8 +289,12 @@ export default function InventarioPage() {
 
       {/* Tabla de productos con animación */}
       <div
-        className={`transform transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        style={{ transitionDelay: '800ms' }}
+        className={`transform transition-all duration-300 ease-out ${
+          isVisible
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-4'
+        }`}
+        style={{ transitionDelay: '400ms' }}
       >
         <InventarioTable
           productos={productosPagina}
@@ -308,6 +332,7 @@ export default function InventarioPage() {
           />
         </>
       )}
+      </div>
     </div>
   );
 }

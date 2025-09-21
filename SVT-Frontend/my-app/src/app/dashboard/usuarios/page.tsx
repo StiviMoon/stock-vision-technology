@@ -1,6 +1,11 @@
 'use client';
 import UsersDashboard from './components/UsersDashboard';
+import { AdminRoute } from '@/src/components/auth/ProtectedRoute';
 
 export default function UsuariosPage() {
-  return <UsersDashboard />;
+  return (
+    <AdminRoute>
+      <UsersDashboard />
+    </AdminRoute>
+  );
 }

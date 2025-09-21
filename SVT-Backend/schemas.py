@@ -4,23 +4,86 @@ from datetime import datetime
 from enum import Enum
 
 
+# ====================== ENUMS ======================
+class UserRoleEnum(str, Enum):
+    ADMIN = "ADMIN"
+    USUARIO = "USUARIO"
+    INVITADO = "INVITADO"
+
+
 # ====================== ESQUEMAS DE USUARIO ======================
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     email: EmailStr
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    rol: UserRoleEnum = UserRoleEnum.USUARIO
+
+
+class UserCreate(UserBase):
     password: str
 
 
-class UserResponse(BaseModel):
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    rol: Optional[UserRoleEnum] = None
+    activo: Optional[bool] = None
+
+
+class UserResponse(UserBase):
+    id: int
+    activo: bool
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserListResponse(BaseModel):
     id: int
     email: EmailStr
-    rol: str
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    rol: UserRoleEnum
+    activo: bool
+    fecha_creacion: datetime
 
     class Config:
         from_attributes = True
 
 
 class RoleUpdateRequest(BaseModel):
-    new_role: str
+    new_role: UserRoleEnum
+
+
+# ====================== ESQUEMAS DE CATEGORÍA ======================
+class CategoriaBase(BaseModel):
+    nombre: str
+    codigo: str
+    descripcion: Optional[str] = None
+    activa: bool = True
+
+
+class CategoriaCreate(CategoriaBase):
+    pass
+
+
+class CategoriaUpdate(BaseModel):
+    nombre: Optional[str] = None
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
+    activa: Optional[bool] = None
+
+
+class CategoriaResponse(CategoriaBase):
+    id: int
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # ====================== ESQUEMAS DE PROVEEDOR ======================
@@ -106,7 +169,7 @@ class ProductoBase(BaseModel):
     sku: str
     nombre: str
     descripcion: str
-    categoria: str
+    categoria_id: int
     precio_unitario: float = Field(gt=0)
     proveedor_id: int
     stock_minimo: int = Field(ge=0)
@@ -120,7 +183,7 @@ class ProductoCreate(ProductoBase):
 class ProductoUpdate(BaseModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
-    categoria: Optional[str] = None
+    categoria_id: Optional[int] = None
     precio_unitario: Optional[float] = Field(None, gt=0)
     proveedor_id: Optional[int] = None
     stock_actual: Optional[int] = Field(None, ge=0)
@@ -184,6 +247,7 @@ class ProductoListResponse(ProductoBase):
     fecha_creacion: datetime
     fecha_actualizacion: datetime
     proveedor: Optional[ProveedorResponse] = None
+    categoria_nombre: Optional[str] = None  # Usar categoria_nombre en lugar de categoria_rel
     stocks_bodega: List[StockBodegaSimple] = []
 
     class Config:
@@ -193,6 +257,7 @@ class ProductoListResponse(ProductoBase):
 # Para detalles completos
 class ProductoDetailResponse(ProductoResponse):
     proveedor: Optional[ProveedorResponse] = None
+    categoria_nombre: Optional[str] = None  # Usar categoria_nombre en lugar de categoria_rel
     stocks_bodega: List[StockBodegaResponse] = []
 
     class Config:

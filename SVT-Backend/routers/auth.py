@@ -13,12 +13,16 @@ router = APIRouter()
 # Registro de usuario
 @router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
-    hashed_password = security.pwd_context.hash(user.password)
-    db_user = models.User(email=user.email, hashed_password=hashed_password, rol="USER")
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    """Registrar un nuevo usuario (por defecto como USUARIO)"""
+    from services.user_service import UserService
+
+    user_service = UserService(db)
+
+    # Asegurar que el rol por defecto sea USUARIO
+    if not user.rol:
+        user.rol = schemas.UserRoleEnum.USUARIO
+
+    return user_service.create_user(user)
 
 
 # Login de usuario
