@@ -27,7 +27,7 @@ import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 import ProductoRow from './ProductoRow';
 
-export default function ProductoTable({ productos, onEdit, onDelete }) {
+export default function ProductoTable({ productos, onEdit, onDelete, onView }) {
   // Estado para los productos filtrados
   const [filteredProductos, setFilteredProductos] = useState(productos);
 
@@ -241,7 +241,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                 <TableHead>Categoría</TableHead>
                 <TableHead>Precio</TableHead>
                 <TableHead>Stock</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                <TableHead className="w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -260,6 +260,7 @@ export default function ProductoTable({ productos, onEdit, onDelete }) {
                     producto={producto}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onView={onView}
                   />
                 ))
               )}

@@ -9,6 +9,7 @@ import { CategoriaTable } from './CategoriaTable';
 import { CategoriaFilters } from './CategoriaFilters';
 import { CategoriaStats } from './CategoriaStats';
 import { DeleteCategoriaDialog } from './DeleteCategoriaDialog';
+import { CategoriaDetails } from './CategoriaDetails';
 import { useCategorias } from '@/src/hooks/useCategorias';
 import { Categoria, CategoriaCreate } from '@/src/services/interfaces';
 
@@ -33,6 +34,10 @@ export const CategoriaDashboard: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estado para el diálogo de detalles
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [categoriaToView, setCategoriaToView] = useState<Categoria | null>(null);
 
   useEffect(() => {
     // Activar las animaciones después de cargar los datos
@@ -64,6 +69,11 @@ export const CategoriaDashboard: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  const openDetailsDialog = (categoria: Categoria) => {
+    setCategoriaToView(categoria);
+    setIsDetailsDialogOpen(true);
+  };
+
   const confirmDelete = async () => {
     if (!categoriaToDelete) return;
 
@@ -76,6 +86,23 @@ export const CategoriaDashboard: React.FC = () => {
       console.error(err);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Función para activar/inactivar categoría
+  const handleToggleStatus = async (categoria: Categoria) => {
+    try {
+      const updatedData: CategoriaCreate = {
+        nombre: categoria.nombre,
+        codigo: categoria.codigo,
+        descripcion: categoria.descripcion || '',
+        activa: !categoria.activa, // Cambiar el estado
+      };
+
+      await updateCategoria(categoria.id, updatedData);
+      loadCategorias(); // Recargar la lista
+    } catch (err: any) {
+      console.error('Error al cambiar estado de categoría:', err);
     }
   };
 
@@ -121,8 +148,7 @@ export const CategoriaDashboard: React.FC = () => {
   };
 
   const handleView = (categoria: Categoria) => {
-    // Aquí podrías implementar una vista de detalles
-    console.log('Ver categoría:', categoria);
+    openDetailsDialog(categoria);
   };
 
   const handleClearFilters = () => {
@@ -137,7 +163,7 @@ export const CategoriaDashboard: React.FC = () => {
     );
   }
 
-  if (error && !isModalOpen && !isDeleteDialogOpen) {
+  if (error && !isModalOpen && !isDeleteDialogOpen && !isDetailsDialogOpen) {
     return (
       <Alert variant="destructive" className="max-w-4xl mx-auto my-4">
         <AlertCircle className="h-4 w-4" />
@@ -228,6 +254,7 @@ export const CategoriaDashboard: React.FC = () => {
             onEdit={openEditModal}
             onDelete={openDeleteDialog}
             onView={handleView}
+            onToggleStatus={handleToggleStatus}
             loading={loading}
           />
         </div>
@@ -250,6 +277,16 @@ export const CategoriaDashboard: React.FC = () => {
         onConfirm={confirmDelete}
         isDeleting={isDeleting}
         error={error}
+      />
+
+      {/* Diálogo de detalles */}
+      <CategoriaDetails
+        isOpen={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        categoria={categoriaToView}
+        onEdit={openEditModal}
+        onDelete={openDeleteDialog}
+        onToggleStatus={handleToggleStatus}
       />
     </div>
   );

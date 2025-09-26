@@ -210,12 +210,11 @@ export enum MotivoMovimiento {
   OTRO = "OTRO"
 }
 
-// Interfaces para Bodega
+// Interfaces para Bodega - Actualizadas para coincidir con el backend
 export interface BodegaBase {
   nombre: string;
   codigo: string;
-  ubicacion: string;
-  descripcion?: string;
+  direccion?: string; // Cambiado de ubicacion a direccion
   encargado?: string;
   telefono?: string;
   activa: boolean;
@@ -225,8 +224,7 @@ export interface BodegaCreate extends BodegaBase {}
 
 export interface BodegaUpdate {
   nombre?: string;
-  ubicacion?: string;
-  descripcion?: string;
+  direccion?: string; // Cambiado de ubicacion a direccion
   encargado?: string;
   telefono?: string;
   activa?: boolean;
@@ -235,6 +233,7 @@ export interface BodegaUpdate {
 export interface Bodega extends BodegaBase {
   id: number;
   fecha_creacion: string;
+  fecha_actualizacion: string;
 }
 
 // Interfaces para Stock por Bodega

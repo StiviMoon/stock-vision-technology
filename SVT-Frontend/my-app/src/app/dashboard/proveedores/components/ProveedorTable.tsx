@@ -1,42 +1,35 @@
-import { 
-    Table, 
-    TableBody, 
-    TableCell, 
-    TableHead, 
-    TableHeader, 
-    TableRow 
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
   } from "@/components/ui/table";
-  import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuLabel, 
-    DropdownMenuSeparator, 
-    DropdownMenuTrigger 
-  } from "@/components/ui/dropdown-menu";
   import { Badge } from "@/components/ui/badge";
-  import { Button } from "@/components/ui/button";
-  import { Edit, MoreHorizontal, Trash2, Mail, Phone, ChevronLeft, ChevronRight } from "lucide-react";
+  import { Mail, Phone, ChevronLeft, ChevronRight } from "lucide-react";
   import { Proveedor } from "./ProveedorDashBoard";
   import { useState } from "react";
-  
+  import { TableActions } from "@/src/components/dashboard/table-actions";
+  import { Button } from "@/components/ui/button";
   interface ProveedorTableProps {
     proveedores: Proveedor[];
     onEdit: (proveedor: Proveedor) => void;
     onDelete: (proveedor: Proveedor) => void;
+    onView?: (proveedor: Proveedor) => void;
   }
-  
-  export default function ProveedorTable({ proveedores, onEdit, onDelete }: ProveedorTableProps) {
+
+  export default function ProveedorTable({ proveedores, onEdit, onDelete, onView }: ProveedorTableProps) {
     const [pagina, setPagina] = useState(1);
     const proveedoresPorPagina = 10;
-  
+
     // Calcular proveedores a mostrar en la página actual
     const totalPaginas = Math.ceil(proveedores.length / proveedoresPorPagina);
     const proveedoresPagina = proveedores.slice(
       (pagina - 1) * proveedoresPorPagina,
       pagina * proveedoresPorPagina
     );
-  
+
     if (proveedores.length === 0) {
       return (
         <div className="border rounded-lg p-8 flex flex-col items-center justify-center bg-background shadow">
@@ -47,7 +40,7 @@ import {
         </div>
       );
     }
-  
+
     return (
       <div className="rounded-lg border overflow-hidden bg-background shadow">
         <Table>
@@ -60,7 +53,7 @@ import {
               <TableHead>Teléfono</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Dirección</TableHead>
-              <TableHead className="w-[100px] text-right">Acciones</TableHead>
+              <TableHead className="w-[120px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,29 +83,12 @@ import {
                   {proveedor.direccion || "-"}
                 </TableCell>
                 <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Abrir menú</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onEdit(proveedor)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Editar</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => onDelete(proveedor)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Eliminar</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <TableActions
+                    onEdit={() => onEdit(proveedor)}
+                    onDelete={() => onDelete(proveedor)}
+                    onView={() => onView?.(proveedor)}
+                    canView={!!onView}
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -131,7 +107,7 @@ import {
             </Button>
             <span className="text-sm">
               Página {pagina} de {totalPaginas}
-            </span>
+          </span>
             <Button
               variant="ghost"
               size="icon"

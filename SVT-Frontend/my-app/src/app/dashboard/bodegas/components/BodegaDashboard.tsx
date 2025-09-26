@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, AlertCircle } from 'lucide-react';
+import { PlusCircle, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BodegaForm } from './BodegaForm';
 import { BodegaTable } from './BodegaTable';
 import { BodegaStats } from './BodegaStats';
 import { DeleteBodegaDialog } from './DeleteBodegaDialog';
+import { BodegaDetails } from './BodegaDetails';
 import { useBodegas } from '@/src/hooks/useBodegas';
-import { Bodega, BodegaCreate, BodegaUpdate } from '@/src/services/interfaces';
+import { Bodega, BodegaCreate } from '@/src/services/interfaces';
 
 export const BodegaDashboard: React.FC = () => {
   const {
@@ -22,14 +23,19 @@ export const BodegaDashboard: React.FC = () => {
     deleteBodega,
   } = useBodegas();
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentBodega, setCurrentBodega] = useState<Bodega | null>(null);
+  const [search, setSearch] = useState('');
+
+  // Estado para el diálogo de confirmación de eliminación
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingBodega, setEditingBodega] = useState<Bodega | null>(null);
   const [bodegaToDelete, setBodegaToDelete] = useState<Bodega | null>(null);
-  const [formLoading, setFormLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estado para el diálogo de detalles
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [bodegaToView, setBodegaToView] = useState<Bodega | null>(null);
 
   useEffect(() => {
     // Activar las animaciones después de cargar los datos
@@ -37,69 +43,90 @@ export const BodegaDashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleCreateBodega = async (data: BodegaCreate) => {
-    setFormLoading(true);
-    try {
-      await createBodega(data);
-      setIsFormOpen(false);
-    } catch (error) {
-      // El error se maneja en el hook
-    } finally {
-      setFormLoading(false);
-    }
+  // Filtrar bodegas por búsqueda
+  const filteredBodegas = bodegas.filter(bodega =>
+    bodega.nombre.toLowerCase().includes(search.toLowerCase()) ||
+    bodega.codigo.toLowerCase().includes(search.toLowerCase()) ||
+    bodega.direccion.toLowerCase().includes(search.toLowerCase()) ||
+    (bodega.encargado && bodega.encargado.toLowerCase().includes(search.toLowerCase())) ||
+    (bodega.telefono && bodega.telefono.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const openCreateModal = () => {
+    setCurrentBodega(null);
+    setIsModalOpen(true);
   };
 
-  const handleUpdateBodega = async (data: BodegaCreate) => {
-    if (!editingBodega) return;
-
-    setFormLoading(true);
-    try {
-      await updateBodega(editingBodega.id, data as BodegaUpdate);
-      setEditingBodega(null);
-      setIsFormOpen(false);
-    } catch (error) {
-      // El error se maneja en el hook
-    } finally {
-      setFormLoading(false);
-    }
+  const openEditModal = (bodega: Bodega) => {
+    setCurrentBodega(bodega);
+    setIsModalOpen(true);
   };
 
-  const handleEditBodega = (bodega: Bodega) => {
-    setEditingBodega(bodega);
-    setIsFormOpen(true);
-  };
-
-  const handleDeleteBodega = (bodega: Bodega) => {
+  const openDeleteDialog = (bodega: Bodega) => {
     setBodegaToDelete(bodega);
     setIsDeleteDialogOpen(true);
-    setDeleteError(null);
   };
 
-  const confirmDeleteBodega = async () => {
+  const openDetailsDialog = (bodega: Bodega) => {
+    setBodegaToView(bodega);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
     if (!bodegaToDelete) return;
 
-    setDeleteLoading(true);
-    setDeleteError(null);
     try {
+      setIsDeleting(true);
       await deleteBodega(bodegaToDelete.id);
       setIsDeleteDialogOpen(false);
-      setBodegaToDelete(null);
-    } catch (error: any) {
-      setDeleteError(error.message || 'Error al eliminar bodega');
+      loadBodegas();
+    } catch (err: any) {
+      console.error(err);
     } finally {
-      setDeleteLoading(false);
+      setIsDeleting(false);
     }
   };
 
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setEditingBodega(null);
+  // Función para activar/inactivar bodega
+  const handleToggleStatus = async (bodega: Bodega) => {
+    try {
+      const updatedData: BodegaCreate = {
+        nombre: bodega.nombre,
+        codigo: bodega.codigo,
+        direccion: bodega.direccion || '',
+        encargado: bodega.encargado || '',
+        telefono: bodega.telefono || '',
+        activa: !bodega.activa, // Cambiar el estado
+      };
+
+      await updateBodega(bodega.id, updatedData);
+      loadBodegas(); // Recargar la lista
+    } catch (err: any) {
+      console.error('Error al cambiar estado de bodega:', err);
+    }
   };
 
-  const handleCloseDeleteDialog = () => {
-    setIsDeleteDialogOpen(false);
-    setBodegaToDelete(null);
-    setDeleteError(null);
+  const handleFormSubmit = async (formData: BodegaCreate) => {
+    try {
+      if (currentBodega) {
+        await updateBodega(currentBodega.id, formData);
+      } else {
+        await createBodega(formData);
+      }
+      setIsModalOpen(false);
+      loadBodegas();
+    } catch (err: any) {
+      console.error('Error:', err);
+      throw err;
+    }
+  };
+
+  const handleView = (bodega: Bodega) => {
+    openDetailsDialog(bodega);
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
   };
 
   if (loading) {
@@ -110,11 +137,20 @@ export const BodegaDashboard: React.FC = () => {
     );
   }
 
+  if (error && !isModalOpen && !isDeleteDialogOpen && !isDetailsDialogOpen) {
+    return (
+      <Alert variant="destructive" className="max-w-4xl mx-auto my-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="p-6 md:p-8">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Encabezado y botón de crear */}
+        <div className="flex justify-between items-center">
           <div
             className={`transform transition-all duration-300 ease-out ${
               isVisible
@@ -123,9 +159,11 @@ export const BodegaDashboard: React.FC = () => {
             }`}
             style={{ transitionDelay: '100ms' }}
           >
-            <h1 className="text-3xl font-bold">Bodegas</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Bodegas
+            </h1>
             <p className="text-muted-foreground">
-              Gestiona las bodegas de tu inventario
+              Gestión de bodegas del sistema SVT
             </p>
           </div>
           <div
@@ -136,31 +174,30 @@ export const BodegaDashboard: React.FC = () => {
             }`}
             style={{ transitionDelay: '200ms' }}
           >
-            <Button onClick={() => setIsFormOpen(true)} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
+            <Button
+              onClick={openCreateModal}
+              variant="default"
+              className="flex items-center transition-all duration-150 hover:shadow-md active:translate-y-0.5"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
               Nueva Bodega
             </Button>
           </div>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div
-            className={`transform transition-all duration-300 ease-out ${
-              isVisible
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 translate-y-4'
-            }`}
-            style={{ transitionDelay: '300ms' }}
-          >
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </div>
-        )}
+        {/* Stats */}
+        <div
+          className={`transform transition-all duration-300 ease-out ${
+            isVisible
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-4'
+          }`}
+          style={{ transitionDelay: '300ms' }}
+        >
+          <BodegaStats bodegas={bodegas} loading={loading} />
+        </div>
 
-        {/* Estadísticas */}
+        {/* Table */}
         <div
           className={`transform transition-all duration-300 ease-out ${
             isVisible
@@ -169,44 +206,44 @@ export const BodegaDashboard: React.FC = () => {
           }`}
           style={{ transitionDelay: '400ms' }}
         >
-          <BodegaStats bodegas={bodegas} loading={loading} />
-        </div>
-
-        {/* Tabla */}
-        <div
-          className={`transform transition-all duration-300 ease-out ${
-            isVisible
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 translate-y-4'
-          }`}
-          style={{ transitionDelay: '500ms' }}
-        >
           <BodegaTable
-            bodegas={bodegas}
-            onEdit={handleEditBodega}
-            onDelete={handleDeleteBodega}
+            bodegas={filteredBodegas}
+            onEdit={openEditModal}
+            onDelete={openDeleteDialog}
+            onView={handleView}
+            onToggleStatus={handleToggleStatus}
             loading={loading}
           />
         </div>
       </div>
 
-      {/* Formulario */}
+      {/* Modal para crear/editar bodega */}
       <BodegaForm
-        isOpen={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        bodega={editingBodega}
-        onSubmit={editingBodega ? handleUpdateBodega : handleCreateBodega}
-        loading={formLoading}
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        bodega={currentBodega}
+        onSubmit={handleFormSubmit}
+        loading={loading}
       />
 
-      {/* Diálogo de confirmación */}
+      {/* Diálogo de confirmación para eliminar */}
       <DeleteBodegaDialog
         bodega={bodegaToDelete}
         isOpen={isDeleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        onConfirm={confirmDeleteBodega}
-        loading={deleteLoading}
-        error={deleteError}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        loading={isDeleting}
+        error={error}
+      />
+
+      {/* Diálogo de detalles */}
+      <BodegaDetails
+        isOpen={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        bodega={bodegaToView}
+        onEdit={openEditModal}
+        onDelete={openDeleteDialog}
+        onToggleStatus={handleToggleStatus}
       />
     </div>
   );
