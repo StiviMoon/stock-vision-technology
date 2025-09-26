@@ -8,7 +8,7 @@ import {
   CategoriaUpdate,
 } from './interfaces';
 
-// Constantes para endpoints
+// Constantes para endpoints - Coinciden exactamente con el backend
 const CATEGORIA_ENDPOINTS = {
   BASE: '/categorias',
   BY_ID: (id: number) => `/categorias/${id}`,
@@ -16,17 +16,34 @@ const CATEGORIA_ENDPOINTS = {
   PRODUCTOS_COUNT: (id: number) => `/categorias/${id}/productos/count`,
 } as const;
 
-// Servicio de categorías
+// Servicio de categorías - Mejorado para coincidir con el backend
 export const categoriaService = {
   // Crear una nueva categoría
   create: async (categoriaData: CategoriaCreate): Promise<Categoria> => {
     try {
+      // Validar datos antes de enviar
+      if (!categoriaData.nombre?.trim()) {
+        throw new Error('El nombre es obligatorio');
+      }
+      if (!categoriaData.codigo?.trim()) {
+        throw new Error('El código es obligatorio');
+      }
+
+      // Preparar datos para el backend
+      const payload = {
+        nombre: categoriaData.nombre.trim(),
+        codigo: categoriaData.codigo.trim().toUpperCase(),
+        descripcion: categoriaData.descripcion?.trim() || null,
+        activa: categoriaData.activa,
+      };
+
       const response = await apiClient.post<Categoria>(
         CATEGORIA_ENDPOINTS.BASE,
-        categoriaData
+        payload
       );
       return response.data;
     } catch (error) {
+      console.error('Error al crear categoría:', error);
       throw error;
     }
   },
@@ -46,6 +63,7 @@ export const categoriaService = {
       const response = await apiClient.get<Categoria[]>(url);
       return response.data;
     } catch (error) {
+      console.error('Error al obtener categorías:', error);
       throw error;
     }
   },
@@ -58,6 +76,7 @@ export const categoriaService = {
       );
       return response.data;
     } catch (error) {
+      console.error('Error al obtener categorías activas:', error);
       throw error;
     }
   },
@@ -65,11 +84,16 @@ export const categoriaService = {
   // Obtener una categoría por ID
   getById: async (categoriaId: number): Promise<Categoria> => {
     try {
+      if (!categoriaId || categoriaId <= 0) {
+        throw new Error('ID de categoría inválido');
+      }
+
       const response = await apiClient.get<Categoria>(
         CATEGORIA_ENDPOINTS.BY_ID(categoriaId)
       );
       return response.data;
     } catch (error) {
+      console.error('Error al obtener categoría por ID:', error);
       throw error;
     }
   },
@@ -80,12 +104,33 @@ export const categoriaService = {
     categoriaData: CategoriaCreate
   ): Promise<Categoria> => {
     try {
+      if (!categoriaId || categoriaId <= 0) {
+        throw new Error('ID de categoría inválido');
+      }
+
+      // Validar datos antes de enviar
+      if (!categoriaData.nombre?.trim()) {
+        throw new Error('El nombre es obligatorio');
+      }
+      if (!categoriaData.codigo?.trim()) {
+        throw new Error('El código es obligatorio');
+      }
+
+      // Preparar datos para el backend
+      const payload = {
+        nombre: categoriaData.nombre.trim(),
+        codigo: categoriaData.codigo.trim().toUpperCase(),
+        descripcion: categoriaData.descripcion?.trim() || null,
+        activa: categoriaData.activa,
+      };
+
       const response = await apiClient.put<Categoria>(
         CATEGORIA_ENDPOINTS.BY_ID(categoriaId),
-        categoriaData
+        payload
       );
       return response.data;
     } catch (error) {
+      console.error('Error al actualizar categoría:', error);
       throw error;
     }
   },
@@ -93,8 +138,13 @@ export const categoriaService = {
   // Eliminar una categoría
   delete: async (categoriaId: number): Promise<void> => {
     try {
+      if (!categoriaId || categoriaId <= 0) {
+        throw new Error('ID de categoría inválido');
+      }
+
       await apiClient.delete(CATEGORIA_ENDPOINTS.BY_ID(categoriaId));
     } catch (error) {
+      console.error('Error al eliminar categoría:', error);
       throw error;
     }
   },
@@ -102,14 +152,19 @@ export const categoriaService = {
   // Buscar categorías por nombre, código o descripción
   search: async (query: string): Promise<Categoria[]> => {
     try {
+      if (!query?.trim()) {
+        return await categoriaService.getAll();
+      }
+
       const response = await apiClient.get<Categoria[]>(
         CATEGORIA_ENDPOINTS.BASE,
         {
-          params: { search: query },
+          params: { search: query.trim() },
         }
       );
       return response.data;
     } catch (error) {
+      console.error('Error al buscar categorías:', error);
       throw error;
     }
   },
@@ -124,7 +179,7 @@ export const categoriaService = {
       const params = {
         skip: (page - 1) * size,
         limit: size,
-        ...(search && { search })
+        ...(search && { search: search.trim() })
       };
       const queryParams = createQueryParams(params);
       const url = `${CATEGORIA_ENDPOINTS.BASE}?${queryParams}`;
@@ -132,6 +187,7 @@ export const categoriaService = {
       const response = await apiClient.get<Categoria[]>(url);
       return handlePaginatedResponse(response);
     } catch (error) {
+      console.error('Error al obtener categorías paginadas:', error);
       throw error;
     }
   },
@@ -142,13 +198,29 @@ export const categoriaService = {
     productos_count: number;
   }> => {
     try {
+      if (!categoriaId || categoriaId <= 0) {
+        throw new Error('ID de categoría inválido');
+      }
+
       const response = await apiClient.get<{
         categoria_id: number;
         productos_count: number;
       }>(CATEGORIA_ENDPOINTS.PRODUCTOS_COUNT(categoriaId));
       return response.data;
     } catch (error) {
+      console.error('Error al contar productos de categoría:', error);
       throw error;
+    }
+  },
+
+  // Verificar si una categoría puede ser eliminada (no tiene productos asociados)
+  canDelete: async (categoriaId: number): Promise<boolean> => {
+    try {
+      const count = await categoriaService.getProductosCount(categoriaId);
+      return count.productos_count === 0;
+    } catch (error) {
+      console.error('Error al verificar si se puede eliminar categoría:', error);
+      return false;
     }
   },
 };

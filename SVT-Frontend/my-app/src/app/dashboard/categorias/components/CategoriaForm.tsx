@@ -25,18 +25,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Schema para validación del formulario
+// Schema para validación del formulario - Coincide exactamente con el backend
 const categoriaSchema = z.object({
   nombre: z.string()
     .min(2, { message: 'El nombre debe tener al menos 2 caracteres' })
-    .max(100, { message: 'El nombre no puede exceder 100 caracteres' }),
+    .max(100, { message: 'El nombre no puede exceder 100 caracteres' })
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, { message: 'El nombre solo puede contener letras y espacios' }),
   codigo: z.string()
     .min(1, { message: 'El código es obligatorio' })
-    .max(50, { message: 'El código no puede exceder 50 caracteres' }),
-  descripcion: z.string().max(500, { message: 'La descripción no puede exceder 500 caracteres' }).optional(),
+    .max(50, { message: 'El código no puede exceder 50 caracteres' })
+    .regex(/^[A-Z0-9_]+$/, { message: 'El código solo puede contener letras mayúsculas, números y guiones bajos' }),
+  descripcion: z.string()
+    .max(500, { message: 'La descripción no puede exceder 500 caracteres' })
+    .optional()
+    .or(z.literal('')),
   activa: z.boolean(),
 });
 
@@ -47,7 +52,11 @@ interface CategoriaFormProps {
   onOpenChange: (open: boolean) => void;
   formMode: 'create' | 'edit';
   initialData: Categoria | null;
-  onSubmit: (data: CategoriaFormValues) => Promise<{ success: boolean; validationErrors?: Record<string, string>; generalError?: string }>;
+  onSubmit: (data: CategoriaFormValues) => Promise<{
+    success: boolean;
+    validationErrors?: Record<string, string>;
+    generalError?: string
+  }>;
 }
 
 export const CategoriaForm: React.FC<CategoriaFormProps> = ({
@@ -59,6 +68,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Inicializar el formulario con react-hook-form y zod
   const form = useForm<CategoriaFormValues>({
@@ -68,7 +78,8 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
       codigo: '',
       descripcion: '',
       activa: true,
-    }
+    },
+    mode: 'onChange', // Validar en tiempo real
   });
 
   // Actualizar el formulario cuando cambian los datos iniciales
@@ -91,16 +102,26 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
       });
     }
 
-    // Limpiar errores al abrir/cerrar el modal
+    // Limpiar errores y mensajes al abrir/cerrar el modal
     setGeneralError(null);
+    setSuccessMessage(null);
   }, [isOpen, initialData, form]);
 
   const handleSubmit = async (values: CategoriaFormValues) => {
     setIsSubmitting(true);
     setGeneralError(null);
+    setSuccessMessage(null);
 
     try {
-      const result = await onSubmit(values);
+      // Preparar los datos para enviar al backend
+      const formData: CategoriaCreate = {
+        nombre: values.nombre.trim(),
+        codigo: values.codigo.trim().toUpperCase(),
+        descripcion: values.descripcion?.trim() || undefined,
+        activa: values.activa,
+      };
+
+      const result = await onSubmit(formData);
 
       if (!result.success) {
         // Manejar errores de validación del API
@@ -120,32 +141,69 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
         return;
       }
 
-      // Éxito: el modal será cerrado por el componente padre
+      // Éxito: mostrar mensaje de éxito
+      setSuccessMessage(
+        formMode === 'create'
+          ? 'Categoría creada exitosamente'
+          : 'Categoría actualizada exitosamente'
+      );
+
+      // Cerrar el modal después de un breve delay
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+
     } catch (error) {
       setGeneralError('Ha ocurrido un error inesperado');
-      console.error(error);
+      console.error('Error en el formulario:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    if (!isSubmitting) {
+      onOpenChange(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[650px]">
         <DialogHeader>
-          <DialogTitle>
-            {formMode === 'create' ? 'Crear nueva categoría' : 'Editar categoría'}
+          <DialogTitle className="flex items-center gap-2">
+            {formMode === 'create' ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Crear nueva categoría
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-5 w-5 text-blue-600" />
+                Editar categoría
+              </>
+            )}
           </DialogTitle>
         </DialogHeader>
 
         {generalError && (
           <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>{generalError}</AlertDescription>
           </Alert>
         )}
 
+        {successMessage && (
+          <Alert className="mb-4 border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              {successMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Nombre de la categoría */}
               <FormField
@@ -153,9 +211,17 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                 name="nombre"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel className="flex items-center gap-1">
+                      Nombre
+                      <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ej: Electrónicos" />
+                      <Input
+                        {...field}
+                        placeholder="Ej: Electrónicos"
+                        disabled={isSubmitting}
+                        className="transition-all duration-200"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,12 +234,20 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                 name="codigo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Código <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel className="flex items-center gap-1">
+                      Código
+                      <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="Ej: ELEC001"
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        disabled={isSubmitting}
+                        className="transition-all duration-200"
+                        onChange={(e) => {
+                          const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                          field.onChange(value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -194,6 +268,8 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                       {...field}
                       placeholder="Descripción de la categoría..."
                       rows={3}
+                      disabled={isSubmitting}
+                      className="transition-all duration-200"
                     />
                   </FormControl>
                   <FormMessage />
@@ -211,12 +287,17 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      disabled={isSubmitting}
+                      className="transition-all duration-200"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
+                    <FormLabel className="text-sm font-medium">
                       Categoría activa
                     </FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Las categorías inactivas no aparecerán en los formularios de productos
+                    </p>
                   </div>
                 </FormItem>
               )}
@@ -226,14 +307,19 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={handleClose}
                 disabled={isSubmitting}
+                className="transition-all duration-200"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="transition-all duration-200"
+              >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {formMode === 'create' ? 'Crear' : 'Guardar cambios'}
+                {formMode === 'create' ? 'Crear categoría' : 'Guardar cambios'}
               </Button>
             </DialogFooter>
           </form>

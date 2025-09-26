@@ -146,6 +146,12 @@ export default function ProductoDashBoard() {
     }
   };
 
+  const handleView = (producto) => {
+    // Aquí podrías implementar una vista de detalles del producto
+    console.log('Ver producto:', producto);
+    // Por ejemplo, abrir un modal con los detalles del producto
+  };
+
   if (loading)
     return (
       <div className='flex justify-center items-center h-screen'>
@@ -207,6 +213,7 @@ export default function ProductoDashBoard() {
             productos={productos}
             onEdit={openEditModal}
             onDelete={openDeleteDialog}
+            onView={handleView}
           />
         </div>
       </div>

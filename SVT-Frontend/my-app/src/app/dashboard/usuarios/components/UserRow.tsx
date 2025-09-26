@@ -2,9 +2,8 @@
 
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Check, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
-import { UserActions } from './UserActions';
+import { UserCheck, UserX } from 'lucide-react';
+import { TableActions } from '@/src/components/dashboard/table-actions';
 import { UserRowProps, getRoleBadgeColor, getRoleDisplayName } from '../types';
 
 export function UserRow({
@@ -77,26 +76,18 @@ export function UserRow({
 
       {/* Acciones */}
       <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
-          {canEditUsers && onEditUser && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEditUser(usuario)}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          )}
-          {canDeleteUsers && onDeleteUser && (
-            <UserActions
-              userId={usuario.id}
-              userEmail={usuario.email}
-              isAdmin={true}
-              onUserDeleted={async () => await onDeleteUser(usuario.id)}
-            />
-          )}
-        </div>
+        <TableActions
+          onEdit={() => onEditUser?.(usuario)}
+          onDelete={() => onDeleteUser?.(usuario.id)}
+          onToggleStatus={() => {
+            // Aquí podrías implementar la lógica para activar/inactivar usuarios
+            console.log('Toggle status for user:', usuario.id);
+          }}
+          isActive={usuario.activo}
+          canEdit={canEditUsers}
+          canDelete={canDeleteUsers}
+          canToggleStatus={canEditUsers} // Solo si puede editar puede cambiar estado
+        />
       </TableCell>
     </TableRow>
   );

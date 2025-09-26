@@ -1,9 +1,8 @@
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { TableActions } from "@/src/components/dashboard/table-actions";
 import StockBadge from './StockBadge';
 
-export default function ProductoRow({ producto, onEdit, onDelete }) {
+export default function ProductoRow({ producto, onEdit, onDelete, onView }) {
   return (
     <TableRow>
       <TableCell className="font-medium">{producto.sku}</TableCell>
@@ -13,25 +12,13 @@ export default function ProductoRow({ producto, onEdit, onDelete }) {
       <TableCell>
         <StockBadge stock={producto.stock_actual} />
       </TableCell>
-      <TableCell>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onEdit(producto)}
-            className="h-8 w-8"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={() => onDelete(producto)}
-            className="h-8 w-8"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+      <TableCell className="text-right">
+        <TableActions
+          onEdit={() => onEdit(producto)}
+          onDelete={() => onDelete(producto)}
+          onView={() => onView?.(producto)}
+          canView={!!onView}
+        />
       </TableCell>
     </TableRow>
   );
